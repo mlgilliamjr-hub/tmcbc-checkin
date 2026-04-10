@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="TMCBC Check-In" />
+  <meta name="theme-color" content="#8B2332" />
+  <title>TMCBC Sunday Check-In</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --burgundy: #8B2332; --burgundy-dark: #6b1a27; --burgundy-light: #a8303f;
+      --gold: #D4A853; --gold-light: #e8c57a;
+      --cream: #faf7f2; --charcoal: #1c1c1e; --muted: #6b6b6b;
+      --light-border: #e8e0d5; --success: #2d7a4f; --success-light: #e8f5ee;
+    }
+    body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(--charcoal); min-height: 100vh; }
+    .app { min-height: 100vh; display: flex; flex-direction: column; }
+    .header { background: var(--burgundy); color: white; padding: 18px 20px 14px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 20px rgba(139,35,50,0.3); }
+    .header-church { font-family: 'Playfair Display', serif; font-size: 1.05rem; font-weight: 700; color: var(--gold-light); line-height: 1.2; }
+    .header-sub { font-size: 0.7rem; color: rgba(255,255,255,0.7); text-transform: uppercase; letter-spacing: 0.08em; margin-top: 2px; }
+    .header-date { text-align: right; font-size: 0.78rem; color: rgba(255,255,255,0.75); line-height: 1.5; }
+    .header-date strong { display: block; color: var(--gold-light); font-size: 0.95rem; }
+    .nav-tabs { background: white; border-bottom: 2px solid var(--light-border); display: flex; overflow-x: auto; scrollbar-width: none; }
+    .nav-tabs::-webkit-scrollbar { display: none; }
+    .nav-tab { flex: 1; min-width: 100px; padding: 13px 6px; border: none; background: none; font-family: 'DM Sans', sans-serif; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); cursor: pointer; transition: all 0.2s; border-bottom: 3px solid transparent; margin-bottom: -2px; white-space: nowrap; }
+    .nav-tab.active { color: var(--burgundy); border-bottom-color: var(--burgundy); }
+    .nav-tab:hover:not(.active) { color: var(--burgundy-light); }
+    .main { flex: 1; padding: 18px 14px; max-width: 700px; margin: 0 auto; width: 100%; }
+    .demo-banner { background: #fff3cd; border: 1px solid #f0c36d; border-radius: 10px; padding: 12px 14px; margin-bottom: 18px; font-size: 0.8rem; color: #856404; line-height: 1.5; }
+    .demo-banner strong { display: block; margin-bottom: 3px; }
+    .search-wrapper { position: relative; margin-bottom: 16px; }
+    .search-input { width: 100%; padding: 13px 14px 13px 44px; border: 2px solid var(--light-border); border-radius: 12px; font-family: 'DM Sans', sans-serif; font-size: 1rem; background: white; outline: none; transition: border-color 0.2s; color: var(--charcoal); }
+    .search-input:focus { border-color: var(--burgundy); }
+    .search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--muted); font-size: 1.1rem; pointer-events: none; }
+    .search-clear { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: var(--light-border); border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; font-size: 0.75rem; color: var(--muted); display: flex; align-items: center; justify-content: center; }
+    .section-label { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); margin-bottom: 10px; padding-left: 2px; }
+    .people-list { display: flex; flex-direction: column; gap: 7px; margin-bottom: 20px; }
+    .person-card { background: white; border: 1.5px solid var(--light-border); border-radius: 12px; padding: 13px 14px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; transition: all 0.18s; gap: 10px; }
+    .person-card:hover { border-color: var(--burgundy); box-shadow: 0 2px 10px rgba(139,35,50,0.08); }
+    .person-card.checked-in { background: var(--success-light); border-color: var(--success); cursor: default; }
+    .person-info { display: flex; align-items: center; gap: 11px; flex: 1; min-width: 0; }
+    .person-avatar { width: 40px; height: 40px; border-radius: 50%; background: var(--burgundy); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.88rem; flex-shrink: 0; }
+    .person-name { font-weight: 600; font-size: 0.95rem; }
+    .person-type { font-size: 0.7rem; color: var(--muted); margin-top: 2px; }
+    .checkin-btn { background: var(--burgundy); color: white; border: none; border-radius: 8px; padding: 8px 16px; font-family: 'DM Sans', sans-serif; font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: background 0.2s; white-space: nowrap; flex-shrink: 0; }
+    .checkin-btn:hover { background: var(--burgundy-dark); }
+    .checked-badge { display: flex; align-items: center; gap: 5px; color: var(--success); font-size: 0.8rem; font-weight: 600; flex-shrink: 0; }
+    .guest-type-pills { display: flex; gap: 10px; margin-bottom: 18px; flex-wrap: wrap; }
+    .guest-pill { flex: 1; min-width: 130px; padding: 10px 14px; border: 1.5px solid var(--light-border); border-radius: 10px; background: white; text-align: center; cursor: pointer; transition: all 0.18s; }
+    .guest-pill:hover { border-color: var(--burgundy); }
+    .guest-pill.selected { border-color: var(--burgundy); background: #fdf0f2; }
+    .guest-pill-title { font-size: 0.85rem; font-weight: 600; color: var(--charcoal); }
+    .guest-pill-sub { font-size: 0.7rem; color: var(--muted); margin-top: 3px; }
+    .guest-form-card { background: white; border: 1.5px solid var(--light-border); border-radius: 14px; padding: 22px; margin-bottom: 18px; }
+    .form-title { font-family: 'Playfair Display', serif; font-size: 1.25rem; font-weight: 700; color: var(--burgundy); margin-bottom: 4px; }
+    .form-subtitle { font-size: 0.83rem; color: var(--muted); margin-bottom: 18px; line-height: 1.5; }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 13px; }
+    .form-group { display: flex; flex-direction: column; gap: 5px; }
+    .form-group.full { grid-column: 1 / -1; }
+    .form-label { font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+    .form-input, .form-select, .form-textarea { padding: 10px 13px; border: 1.5px solid var(--light-border); border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 0.9rem; outline: none; transition: border-color 0.2s; color: var(--charcoal); background: white; width: 100%; }
+    .form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--burgundy); }
+    .form-textarea { min-height: 75px; resize: vertical; }
+    .interest-pills { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 4px; }
+    .interest-pill { padding: 5px 13px; border-radius: 20px; border: 1.5px solid var(--light-border); background: white; font-size: 0.78rem; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.15s; color: var(--charcoal); }
+    .interest-pill.on { border-color: var(--burgundy); background: #fdf0f2; color: var(--burgundy); font-weight: 600; }
+    .form-submit { width: 100%; margin-top: 16px; padding: 14px; background: var(--burgundy); color: white; border: none; border-radius: 10px; font-family: 'DM Sans', sans-serif; font-size: 1rem; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+    .form-submit:hover { background: var(--burgundy-dark); }
+    .form-submit:disabled { background: var(--muted); cursor: not-allowed; }
+    .success-card { background: var(--success-light); border: 1.5px solid var(--success); border-radius: 14px; padding: 28px 22px; text-align: center; }
+    .success-icon { font-size: 2.5rem; margin-bottom: 12px; }
+    .success-title { font-family: 'Playfair Display', serif; font-size: 1.35rem; color: var(--success); margin-bottom: 8px; }
+    .success-msg { font-size: 0.88rem; color: var(--muted); line-height: 1.6; margin-bottom: 18px; }
+    .success-reset { background: var(--success); color: white; border: none; border-radius: 8px; padding: 10px 24px; font-family: 'DM Sans', sans-serif; font-weight: 600; cursor: pointer; font-size: 0.9rem; }
+    .report-header { background: var(--burgundy); border-radius: 14px; padding: 20px; color: white; margin-bottom: 18px; }
+    .report-title { font-family: 'Playfair Display', serif; font-size: 1.15rem; margin-bottom: 14px; color: var(--gold-light); }
+    .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .stat-box { background: rgba(255,255,255,0.12); border-radius: 10px; padding: 13px 8px; text-align: center; }
+    .stat-num { font-family: 'Playfair Display', serif; font-size: 1.9rem; font-weight: 700; color: var(--gold-light); line-height: 1; }
+    .stat-label { font-size: 0.66rem; color: rgba(255,255,255,0.75); text-transform: uppercase; letter-spacing: 0.06em; margin-top: 4px; }
+    .guest-highlight { margin-top: 11px; background: rgba(212,168,83,0.2); border-radius: 8px; padding: 9px 13px; font-size: 0.8rem; color: var(--gold-light); }
+    .report-section { margin-bottom: 18px; }
+    .report-list { background: white; border: 1.5px solid var(--light-border); border-radius: 12px; overflow: hidden; }
+    .report-row { display: flex; align-items: center; gap: 10px; padding: 11px 14px; border-bottom: 1px solid var(--light-border); font-size: 0.86rem; }
+    .report-row:last-child { border-bottom: none; }
+    .report-row-num { color: var(--muted); font-size: 0.72rem; width: 18px; flex-shrink: 0; }
+    .report-row-name { flex: 1; font-weight: 500; }
+    .badge { font-size: 0.65rem; font-weight: 700; padding: 3px 8px; border-radius: 20px; letter-spacing: 0.04em; text-transform: uppercase; }
+    .badge-guest { background: #fff3cd; color: #856404; }
+    .badge-member { background: #e8f0fe; color: #1a56a0; }
+    .badge-time { font-size: 0.7rem; color: var(--muted); }
+    .action-btn { width: 100%; padding: 13px; background: white; color: var(--burgundy); border: 2px solid var(--burgundy); border-radius: 10px; font-family: 'DM Sans', sans-serif; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: all 0.2s; margin-top: 8px; }
+    .action-btn:hover { background: var(--burgundy); color: white; }
+    .action-btn.primary { background: var(--burgundy); color: white; border: none; }
+    .action-btn.primary:hover { background: var(--burgundy-dark); }
+    .empty-state { text-align: center; padding: 40px 18px; color: var(--muted); font-size: 0.9rem; line-height: 1.6; }
+    .loading { text-align: center; padding: 30px; color: var(--muted); }
+    .spinner { width: 30px; height: 30px; border: 3px solid var(--light-border); border-top-color: var(--burgundy); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 12px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @media (max-width: 480px) { .form-grid { grid-template-columns: 1fr; } .header-church { font-size: 0.95rem; } }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+
+// ── PLANNING CENTER CONFIG ────────────────────────────────────────────────────
+// Step 1: Go to https://api.planningcenteronline.com/oauth/applications
+// Step 2: Create a new application and copy your App ID and Secret below
+const PC_APP_ID = "87b2f7daa5e3b7f3471d41b54ce5021a24a1efea8ae2b897f26210e2f4c936a5";
+const PC_SECRET = "pco_app_27db656ddfcf01cea4e71e429f956dd897c78a9bae3a0cf6b480b292232156c9c0faf6eb";
+const PC_BASE   = "https://api.planningcenteronline.com";
+const IS_DEMO   = PC_APP_ID === "YOUR_APP_ID";
+
+// ── DEMO DATA (shown when not connected to Planning Center) ───────────────────
+const DEMO_PEOPLE = [
+  { id:"1",  firstName:"Marcus",   lastName:"Johnson",  membershipType:"Member" },
+  { id:"2",  firstName:"Denise",   lastName:"Williams", membershipType:"Member" },
+  { id:"3",  firstName:"Thomas",   lastName:"Brown",    membershipType:"Deacon" },
+  { id:"4",  firstName:"Patricia", lastName:"Davis",    membershipType:"Member" },
+  { id:"5",  firstName:"James",    lastName:"Wilson",   membershipType:"Member" },
+  { id:"6",  firstName:"Angela",   lastName:"Moore",    membershipType:"Member" },
+  { id:"7",  firstName:"Robert",   lastName:"Taylor",   membershipType:"Deacon" },
+  { id:"8",  firstName:"Sandra",   lastName:"Anderson", membershipType:"Member" },
+  { id:"9",  firstName:"Michael",  lastName:"Jackson",  membershipType:"Member" },
+  { id:"10", firstName:"Carolyn",  lastName:"Harris",   membershipType:"Member" },
+  { id:"11", firstName:"David",    lastName:"Martin",   membershipType:"Member" },
+  { id:"12", firstName:"Dorothy",  lastName:"Thompson", membershipType:"Member" },
+].map(p => ({ ...p, name: p.firstName + " " + p.lastName }));
+
+// ── PLANNING CENTER API HELPERS ───────────────────────────────────────────────
+const authHeader = () => "Basic " + btoa(PC_APP_ID + ":" + PC_SECRET);
+
+async function pcFetch(path, opts) {
+  opts = opts || {};
+  const res = await fetch(PC_BASE + path, Object.assign({}, opts, {
+    headers: Object.assign({ Authorization: authHeader(), "Content-Type": "application/json" }, opts.headers || {})
+  }));
+  if (!res.ok) throw new Error("PC " + res.status);
+  return res.json();
+}
+
+async function fetchPeople(search) {
+  search = search || "";
+  const q = search
+    ? "?where[search_name]=" + encodeURIComponent(search) + "&per_page=50"
+    : "?per_page=100&order=last_name";
+  const d = await pcFetch("/people/v2/people" + q);
+  return d.data.map(p => ({
+    id: p.id,
+    firstName: p.attributes.first_name,
+    lastName:  p.attributes.last_name,
+    name:      p.attributes.first_name + " " + p.attributes.last_name,
+    membershipType: p.attributes.membership || "Member",
+    email: p.attributes.primary_email || "",
+    phone: p.attributes.primary_phone_number || "",
+  }));
+}
+
+async function getOrCreateEvent() {
+  const d = await pcFetch("/check_ins/v2/events?where[name_contains]=Sunday&per_page=10");
+  if (d.data.length > 0) return d.data[0].id;
+  const today = new Date().toISOString().split("T")[0];
+  const c = await pcFetch("/check_ins/v2/events", {
+    method: "POST",
+    body: JSON.stringify({ data: { type: "Event", attributes: { name: "Sunday Worship -- " + today } } })
+  });
+  return c.data.id;
+}
+
+async function checkInPC(personId, eventId) {
+  await pcFetch("/check_ins/v2/check_ins", {
+    method: "POST",
+    body: JSON.stringify({ data: { type: "CheckIn", attributes: { kind: "Regular" },
+      relationships: {
+        person: { data: { type: "Person", id: personId } },
+        event:  { data: { type: "Event",  id: eventId  } }
+      }
+    }})
+  });
+}
+
+async function createGuestPC(g) {
+  const visitDate = new Date().toLocaleDateString("en-US", { weekday:"long", year:"numeric", month:"long", day:"numeric" });
+  const person = await pcFetch("/people/v2/people", {
+    method: "POST",
+    body: JSON.stringify({ data: { type: "Person", attributes: {
+      first_name: g.firstName, last_name: g.lastName,
+      primary_email: g.email, primary_phone_number: g.phone,
+      street: g.address || "", city: g.city || "", state: g.state || "VA", zip: g.zip || "",
+      membership: g.guestType === "first-time" ? "First-Time Guest" : "Returning Guest"
+    }}})
+  });
+  const pid = person.data.id;
+  const interests = g.interestedIn && g.interestedIn.length ? g.interestedIn.join(", ") : "None";
+  await pcFetch("/people/v2/people/" + pid + "/notes", {
+    method: "POST",
+    body: JSON.stringify({ data: { type: "Note", attributes: {
+      note: "Visit Date: " + visitDate + "\nGuest Type: " + (g.guestType === "first-time" ? "First-Time Guest" : "Returning Guest") +
+            "\nHow They Heard: " + (g.howHeard || "Not provided") +
+            "\nInterests: " + interests +
+            "\nPrayer Request: " + (g.prayerRequest || "None"),
+      note_category_id: null
+    }}})
+  }).catch(function(){});
+  return pid;
+}
+
+function saveGuestLocally(g) {
+  try {
+    const stored = JSON.parse(localStorage.getItem("tmcbc_guests") || "[]");
+    stored.push(Object.assign({}, g, { timestamp: new Date().toISOString() }));
+    localStorage.setItem("tmcbc_guests", JSON.stringify(stored));
+  } catch(e) {}
+}
+
+// ── REACT HELPERS ─────────────────────────────────────────────────────────────
+const { useState, useEffect, useRef } = React;
+const nowStr   = () => new Date().toLocaleTimeString("en-US", { hour:"2-digit", minute:"2-digit" });
+const todayStr = () => new Date().toLocaleDateString("en-US", { weekday:"long", year:"numeric", month:"long", day:"numeric" });
+const initials = p => ((p.firstName||"")[0] || "") + ((p.lastName||"")[0] || "");
+
+// ── MAIN APP ──────────────────────────────────────────────────────────────────
+function App() {
+  const [tab,       setTab]       = useState("checkin");
+  const [people,    setPeople]    = useState([]);
+  const [search,    setSearch]    = useState("");
+  const [checkedIn, setCheckedIn] = useState({});
+  const [loading,   setLoading]   = useState(false);
+  const [eventId,   setEventId]   = useState(null);
+
+  useEffect(function() {
+    if (IS_DEMO) { setPeople(DEMO_PEOPLE); setEventId("demo"); return; }
+    setLoading(true);
+    Promise.all([getOrCreateEvent(), fetchPeople()])
+      .then(function(results) { setEventId(results[0]); setPeople(results[1]); })
+      .catch(function(e) { console.error(e); })
+      .finally(function() { setLoading(false); });
+  }, []);
+
+  useEffect(function() {
+    if (IS_DEMO || search.length < 2) return;
+    const t = setTimeout(function() {
+      setLoading(true);
+      fetchPeople(search)
+        .then(function(ppl) { setPeople(ppl); })
+        .catch(function(){})
+        .finally(function() { setLoading(false); });
+    }, 400);
+    return function() { clearTimeout(t); };
+  }, [search]);
+
+  const filtered = IS_DEMO
+    ? people.filter(function(p) { return !search || p.name.toLowerCase().indexOf(search.toLowerCase()) >= 0; })
+    : people;
+
+  function handleCheckIn(person) {
+    if (checkedIn[person.id]) return;
+    if (!IS_DEMO) {
+      checkInPC(person.id, eventId).catch(function(e) { console.error(e); });
+    }
+    setCheckedIn(function(prev) {
+      const next = Object.assign({}, prev);
+      next[person.id] = Object.assign({}, person, { time: nowStr(), type: "member" });
+      return next;
+    });
+  }
+
+  const attendees   = Object.values(checkedIn);
+  const members     = attendees.filter(function(a) { return a.type === "member"; });
+  const guests      = attendees.filter(function(a) { return a.type !== "member"; });
+  const firstTimers = attendees.filter(function(a) { return a.type === "first-time"; });
+  const returning   = attendees.filter(function(a) { return a.type === "second-time"; });
+
+  function exportCSV() {
+    const rows = [["Name","Type","Email","Phone","Time"]].concat(
+      attendees.map(function(a) { return [a.name, a.type, a.email||"", a.phone||"", a.time]; })
+    );
+    const csv = rows.map(function(r) { return r.map(function(c) { return '"' + c + '"'; }).join(","); }).join("\n");
+    const url = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "TMCBC-" + new Date().toISOString().split("T")[0] + ".csv";
+    a.click();
+  }
+
+  return (
+    <div className="app">
+      <div className="header">
+        <div>
+          <div className="header-church">The Mount Carmel Baptist Church</div>
+          <div className="header-sub">Sunday Worship Check-In</div>
+        </div>
+        <div className="header-date">
+          <div>{nowStr()}</div>
+          <strong>{new Date().toLocaleDateString("en-US",{month:"short",day:"numeric"})}</strong>
+        </div>
+      </div>
+
+      <div className="nav-tabs">
+        {[["checkin","✓ Check-In"],["guest","✦ Guest Registration"],["report","⊞ Attendance Report"]].map(function(item) {
+          return (
+            <button key={item[0]} className={"nav-tab" + (tab===item[0]?" active":"")} onClick={function(){setTab(item[0]);}}>
+              {item[1]}
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="main">
+        {IS_DEMO && (
+          <div className="demo-banner">
+            <strong>Demo Mode -- Planning Center not connected</strong>
+            Open this file and replace YOUR_APP_ID and YOUR_SECRET near the top with your credentials from api.planningcenteronline.com/oauth/applications
+          </div>
+        )}
+
+        {tab === "checkin" && (
+          <div>
+            <div className="search-wrapper">
+              <span className="search-icon">&#128269;</span>
+              <input className="search-input" placeholder="Search by name..." value={search} onChange={function(e){setSearch(e.target.value);}} autoComplete="off" />
+              {search && <button className="search-clear" onClick={function(){setSearch("");}}>x</button>}
+            </div>
+            {loading ? (
+              <div className="loading"><div className="spinner"></div><div>Loading congregation...</div></div>
+            ) : filtered.length === 0 ? (
+              <div className="empty-state">
+                No results for &quot;{search}&quot;.<br/>Is this their first visit? Use <strong>Guest Registration</strong>.
+              </div>
+            ) : (
+              <div>
+                <div className="section-label">
+                  {search ? (filtered.length + " result" + (filtered.length!==1?"s":"")) : "Congregation"}
+                </div>
+                <div className="people-list">
+                  {filtered.map(function(person) {
+                    const isIn = !!checkedIn[person.id];
+                    return (
+                      <div key={person.id} className={"person-card" + (isIn?" checked-in":"")} onClick={function(){if(!isIn) handleCheckIn(person);}}>
+                        <div className="person-info">
+                          <div className="person-avatar">{initials(person)}</div>
+                          <div>
+                            <div className="person-name">{person.name}</div>
+                            <div className="person-type">{person.membershipType}</div>
+                          </div>
+                        </div>
+                        {isIn
+                          ? <div className="checked-badge">&#10003; {checkedIn[person.id].time}</div>
+                          : <button className="checkin-btn" onClick={function(e){e.stopPropagation();handleCheckIn(person);}}>Check In</button>
+                        }
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {tab === "guest" && (
+          <GuestForm eventId={eventId} onAdded={function(guest) {
+            setCheckedIn(function(prev) {
+              const next = Object.assign({}, prev);
+              next["g-" + Date.now()] = Object.assign({}, guest, { time: nowStr() });
+              return next;
+            });
+          }}/>
+        )}
+
+        {tab === "report" && (
+          <Report
+            attendees={attendees} members={members} guests={guests}
+            firstTimers={firstTimers} returning={returning}
+            onCSV={exportCSV} onPrint={function(){window.print();}}
+          />
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── GUEST FORM ────────────────────────────────────────────────────────────────
+function GuestForm(props) {
+  const INTERESTS = ["Membership","Baptism","Bible Study","Volunteering","Youth Ministry","Prayer Team"];
+  const blank = { firstName:"", lastName:"", email:"", phone:"", address:"", city:"", state:"VA", zip:"", howHeard:"", prayerRequest:"", interestedIn:[] };
+  const [guestType, setGuestType] = useState("first-time");
+  const [form,      setForm]      = useState(blank);
+  const [done,      setDone]      = useState(false);
+  const [doneFor,   setDoneFor]   = useState("");
+  const [busy,      setBusy]      = useState(false);
+
+  function set(k, v) { setForm(function(p) { const n = Object.assign({}, p); n[k] = v; return n; }); }
+
+  function toggleInterest(item) {
+    setForm(function(p) {
+      const n = Object.assign({}, p);
+      n.interestedIn = p.interestedIn.indexOf(item) >= 0
+        ? p.interestedIn.filter(function(i){return i!==item;})
+        : p.interestedIn.concat([item]);
+      return n;
+    });
+  }
+
+  function submit() {
+    if (!form.firstName || !form.lastName) return;
+    setBusy(true);
+    const g = Object.assign({}, form, {
+      guestType: guestType,
+      name: form.firstName + " " + form.lastName,
+      type: guestType
+    });
+    const finish = function(id) {
+      if (id) g.id = id;
+      saveGuestLocally(g);
+      props.onAdded(g);
+      setDoneFor(form.firstName + " " + form.lastName);
+      setDone(true);
+      setBusy(false);
+    };
+    if (IS_DEMO) { finish(null); return; }
+    createGuestPC(g)
+      .then(function(pid) { return checkInPC(pid, props.eventId).then(function(){ return pid; }); })
+      .then(function(pid) { finish(pid); })
+      .catch(function(e) { console.error(e); finish(null); });
+  }
+
+  if (done) return (
+    <div className="success-card">
+      <div className="success-icon">&#128591;</div>
+      <div className="success-title">Welcome, {doneFor}!</div>
+      <div className="success-msg">
+        We&apos;re so glad you&apos;re here today. Your information has been recorded{!IS_DEMO && " in Planning Center"}.
+        Someone from Mount Carmel will reach out to you this week.
+      </div>
+      <button className="success-reset" onClick={function(){setDone(false);setForm(blank);}}>Register Another Guest</button>
+    </div>
+  );
+
+  return (
+    <div>
+      <div className="guest-type-pills">
+        {[["first-time","First-Time Guest","First visit to TMCBC"],["second-time","Returning Guest","Visited before"]].map(function(item) {
+          return (
+            <div key={item[0]} className={"guest-pill" + (guestType===item[0]?" selected":"")} onClick={function(){setGuestType(item[0]);}}>
+              <div className="guest-pill-title">{item[1]}</div>
+              <div className="guest-pill-sub">{item[2]}</div>
+            </div>
+          );
+        })}
+      </div>
+      <div className="guest-form-card">
+        <div className="form-title">{guestType==="first-time" ? "Welcome to Mount Carmel!" : "Welcome Back!"}</div>
+        <div className="form-subtitle">
+          {guestType==="first-time"
+            ? "We're honored to have you. Share a little about yourself so our team can follow up and make you feel at home."
+            : "Great to see you again! Please confirm your information below."}
+        </div>
+        <div className="form-grid">
+          <div className="form-group">
+            <label className="form-label">First Name *</label>
+            <input className="form-input" value={form.firstName} onChange={function(e){set("firstName",e.target.value);}} placeholder="First name"/>
+          </div>
+          <div className="form-group">
+            <label className="form-label">Last Name *</label>
+            <input className="form-input" value={form.lastName} onChange={function(e){set("lastName",e.target.value);}} placeholder="Last name"/>
+          </div>
+          <div className="form-group full">
+            <label className="form-label">Email Address</label>
+            <input className="form-input" type="email" value={form.email} onChange={function(e){set("email",e.target.value);}} placeholder="your@email.com"/>
+          </div>
+          <div className="form-group full">
+            <label className="form-label">Phone Number</label>
+            <input className="form-input" type="tel" value={form.phone} onChange={function(e){set("phone",e.target.value);}} placeholder="(804) 000-0000"/>
+          </div>
+          <div className="form-group full">
+            <label className="form-label">Street Address</label>
+            <input className="form-input" value={form.address} onChange={function(e){set("address",e.target.value);}} placeholder="123 Main Street"/>
+          </div>
+          <div className="form-group">
+            <label className="form-label">City</label>
+            <input className="form-input" value={form.city} onChange={function(e){set("city",e.target.value);}} placeholder="Richmond"/>
+          </div>
+          <div className="form-group">
+            <label className="form-label">ZIP</label>
+            <input className="form-input" value={form.zip} onChange={function(e){set("zip",e.target.value);}} placeholder="23223"/>
+          </div>
+          <div className="form-group full">
+            <label className="form-label">How did you hear about us?</label>
+            <select className="form-select" value={form.howHeard} onChange={function(e){set("howHeard",e.target.value);}}>
+              <option value="">Select one...</option>
+              <option>Friend / Family Member</option>
+              <option>Social Media (Facebook/Instagram)</option>
+              <option>Website / Google Search</option>
+              <option>Drove by the church</option>
+              <option>Community event</option>
+              <option>YouTube</option>
+              <option>Other</option>
+            </select>
+          </div>
+          <div className="form-group full">
+            <label className="form-label">I'm interested in learning more about...</label>
+            <div className="interest-pills">
+              {INTERESTS.map(function(item) {
+                return (
+                  <button key={item} className={"interest-pill" + (form.interestedIn.indexOf(item)>=0?" on":"")} onClick={function(){toggleInterest(item);}}>
+                    {item}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          <div className="form-group full">
+            <label className="form-label">Prayer Request (optional)</label>
+            <textarea className="form-textarea" value={form.prayerRequest} onChange={function(e){set("prayerRequest",e.target.value);}} placeholder="Share anything you'd like us to pray for..."/>
+          </div>
+        </div>
+        <button className="form-submit" onClick={submit} disabled={!form.firstName||!form.lastName||busy}>
+          {busy ? "Submitting..." : "Complete Check-In \u2192"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ── REPORT ────────────────────────────────────────────────────────────────────
+function Report(props) {
+  const { attendees, members, guests, firstTimers, returning, onCSV, onPrint } = props;
+  return (
+    <div>
+      <div className="report-header">
+        <div className="report-title">Attendance Report</div>
+        <div style={{fontSize:"0.76rem",color:"rgba(255,255,255,0.7)",marginBottom:"14px"}}>{todayStr()}</div>
+        <div className="stats-grid">
+          <div className="stat-box"><div className="stat-num">{attendees.length}</div><div className="stat-label">Total Present</div></div>
+          <div className="stat-box"><div className="stat-num">{members.length}</div><div className="stat-label">Members</div></div>
+          <div className="stat-box"><div className="stat-num">{guests.length}</div><div className="stat-label">Guests</div></div>
+        </div>
+        {firstTimers.length > 0 && (
+          <div className="guest-highlight">
+            {firstTimers.length} first-time guest{firstTimers.length!==1?"s":""} today
+            {returning.length > 0 ? " -- " + returning.length + " returning guest" + (returning.length!==1?"s":"") : ""}
+          </div>
+        )}
+      </div>
+
+      {attendees.length === 0 ? (
+        <div className="empty-state">No one has checked in yet.<br/>Check-ins will appear here as they come in.</div>
+      ) : (
+        <div>
+          {guests.length > 0 && (
+            <div className="report-section">
+              <div className="section-label">Guests ({guests.length})</div>
+              <div className="report-list">
+                {guests.map(function(a, i) {
+                  return (
+                    <div key={a.id||i} className="report-row">
+                      <span className="report-row-num">{i+1}</span>
+                      <span className="report-row-name">{a.name}</span>
+                      <span className={"badge " + (a.type==="first-time"?"badge-guest":"badge-member")}>
+                        {a.type==="first-time"?"1st Visit":"2nd Visit"}
+                      </span>
+                      <span className="badge-time">{a.time}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+          <div className="report-section">
+            <div className="section-label">Members ({members.length})</div>
+            <div className="report-list">
+              {members.map(function(a, i) {
+                return (
+                  <div key={a.id||i} className="report-row">
+                    <span className="report-row-num">{i+1}</span>
+                    <span className="report-row-name">{a.name}</span>
+                    <span className="badge badge-member">Member</span>
+                    <span className="badge-time">{a.time}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+          <button className="action-btn" onClick={onCSV}>Export CSV</button>
+          <button className="action-btn primary" onClick={onPrint} style={{marginTop:"8px"}}>Print Report</button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(React.createElement(App));
+</script>
+</body>
+</html>
