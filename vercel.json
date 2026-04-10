@@ -1,0 +1,6 @@
+{
+  "rewrites": [
+    { "source": "/api/pc/:path*", "destination": "/api/pc?path=/:path*" },
+    { "source": "/(.*)", "destination": "/public/index.html" }
+  ]
+}
