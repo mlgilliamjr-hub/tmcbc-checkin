@@ -4,156 +4,453 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="TMCBC Check-In" />
   <meta name="theme-color" content="#8B2332" />
   <title>TMCBC Sunday Check-In</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
   <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-    :root{--burgundy:#8B2332;--burgundy-dark:#6b1a27;--burgundy-light:#a8303f;--gold:#D4A853;--gold-light:#e8c57a;--cream:#faf7f2;--charcoal:#1c1c1e;--muted:#6b6b6b;--light-border:#e8e0d5;--success:#2d7a4f;--success-light:#e8f5ee}
+    :root{--burgundy:#8B2332;--burgundy-dark:#6b1a27;--gold:#D4A853;--gold-light:#e8c57a;--cream:#faf7f2;--charcoal:#1c1c1e;--muted:#6b6b6b;--border:#e8e0d5;--success:#2d7a4f;--success-bg:#e8f5ee}
     body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--charcoal);min-height:100vh}
     .app{min-height:100vh;display:flex;flex-direction:column}
-    .header{background:var(--burgundy);color:white;padding:18px 20px 14px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 2px 20px rgba(139,35,50,0.3)}
-    .header-church{font-family:'Playfair Display',serif;font-size:1.05rem;font-weight:700;color:var(--gold-light);line-height:1.2}
-    .header-sub{font-size:.7rem;color:rgba(255,255,255,.7);text-transform:uppercase;letter-spacing:.08em;margin-top:2px}
-    .header-date{text-align:right;font-size:.78rem;color:rgba(255,255,255,.75);line-height:1.5}
-    .header-date strong{display:block;color:var(--gold-light);font-size:.95rem}
-    .nav-tabs{background:white;border-bottom:2px solid var(--light-border);display:flex;overflow-x:auto;scrollbar-width:none}
-    .nav-tabs::-webkit-scrollbar{display:none}
-    .nav-tab{flex:1;min-width:100px;padding:13px 6px;border:none;background:none;font-family:'DM Sans',sans-serif;font-size:.75rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);cursor:pointer;transition:all .2s;border-bottom:3px solid transparent;margin-bottom:-2px;white-space:nowrap}
-    .nav-tab.active{color:var(--burgundy);border-bottom-color:var(--burgundy)}
-    .main{flex:1;padding:18px 14px;max-width:700px;margin:0 auto;width:100%}
-    .error-banner{background:#fdecea;border:1px solid #f5c6cb;border-radius:10px;padding:12px 14px;margin-bottom:18px;font-size:.8rem;color:#721c24;line-height:1.5}
-    .error-banner strong{display:block;margin-bottom:3px}
-    .search-wrapper{position:relative;margin-bottom:16px}
-    .search-input{width:100%;padding:13px 14px 13px 44px;border:2px solid var(--light-border);border-radius:12px;font-family:'DM Sans',sans-serif;font-size:1rem;background:white;outline:none;transition:border-color .2s;color:var(--charcoal)}
-    .search-input:focus{border-color:var(--burgundy)}
-    .search-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:1.1rem;pointer-events:none}
-    .search-clear{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:var(--light-border);border:none;border-radius:50%;width:24px;height:24px;cursor:pointer;font-size:.75rem;color:var(--muted);display:flex;align-items:center;justify-content:center}
-    .section-label{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:10px;padding-left:2px}
-    .people-list{display:flex;flex-direction:column;gap:7px;margin-bottom:20px}
-    .person-card{background:white;border:1.5px solid var(--light-border);border-radius:12px;padding:13px 14px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;transition:all .18s;gap:10px}
-    .person-card:hover{border-color:var(--burgundy);box-shadow:0 2px 10px rgba(139,35,50,.08)}
-    .person-card.checked-in{background:var(--success-light);border-color:var(--success);cursor:default}
-    .person-info{display:flex;align-items:center;gap:11px;flex:1;min-width:0}
-    .person-avatar{width:40px;height:40px;border-radius:50%;background:var(--burgundy);color:white;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.88rem;flex-shrink:0}
-    .person-name{font-weight:600;font-size:.95rem}
-    .person-type{font-size:.7rem;color:var(--muted);margin-top:2px}
-    .checkin-btn{background:var(--burgundy);color:white;border:none;border-radius:8px;padding:8px 16px;font-family:'DM Sans',sans-serif;font-size:.8rem;font-weight:600;cursor:pointer;transition:background .2s;white-space:nowrap;flex-shrink:0}
-    .checked-badge{display:flex;align-items:center;gap:5px;color:var(--success);font-size:.8rem;font-weight:600;flex-shrink:0}
-    .guest-type-pills{display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap}
-    .guest-pill{flex:1;min-width:130px;padding:10px 14px;border:1.5px solid var(--light-border);border-radius:10px;background:white;text-align:center;cursor:pointer;transition:all .18s}
-    .guest-pill.selected{border-color:var(--burgundy);background:#fdf0f2}
-    .guest-pill-title{font-size:.85rem;font-weight:600;color:var(--charcoal)}
-    .guest-pill-sub{font-size:.7rem;color:var(--muted);margin-top:3px}
-    .guest-form-card{background:white;border:1.5px solid var(--light-border);border-radius:14px;padding:22px;margin-bottom:18px}
-    .form-title{font-family:'Playfair Display',serif;font-size:1.25rem;font-weight:700;color:var(--burgundy);margin-bottom:4px}
-    .form-subtitle{font-size:.83rem;color:var(--muted);margin-bottom:18px;line-height:1.5}
-    .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:13px}
-    .form-group{display:flex;flex-direction:column;gap:5px}
+
+    /* HEADER */
+    .hdr{background:var(--burgundy);color:#fff;padding:13px 18px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 2px 16px rgba(139,35,50,.3)}
+    .hdr-church{font-family:'Playfair Display',serif;font-size:.98rem;font-weight:700;color:var(--gold-light)}
+    .hdr-sub{font-size:.66rem;color:rgba(255,255,255,.65);text-transform:uppercase;letter-spacing:.08em;margin-top:2px}
+    .hdr-right{text-align:right}
+    .hdr-session{font-size:.76rem;color:var(--gold-light);font-weight:600}
+    .hdr-time{font-size:.66rem;color:rgba(255,255,255,.6)}
+    .hdr-change{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;font-family:'DM Sans',sans-serif;font-size:.6rem;padding:2px 7px;border-radius:5px;cursor:pointer;margin-top:3px;display:block}
+
+    /* SESSION SCREEN */
+    .session-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:var(--cream)}
+    .session-card{background:#fff;border:1.5px solid var(--border);border-radius:18px;padding:28px 24px;width:100%;max-width:440px}
+    .session-title{font-family:'Playfair Display',serif;font-size:1.2rem;color:var(--burgundy);text-align:center;margin-bottom:3px}
+    .session-sub{font-size:.7rem;color:var(--muted);text-align:center;text-transform:uppercase;letter-spacing:.08em;margin-bottom:22px}
+    .session-hr{border:none;border-top:1.5px solid var(--border);margin:0 0 20px}
+    .s-label{font-size:.68rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:5px}
+    .s-input,.s-select{width:100%;padding:11px 12px;border:1.5px solid var(--border);border-radius:9px;font-family:'DM Sans',sans-serif;font-size:.9rem;color:var(--charcoal);background:#fff;outline:none;margin-bottom:14px}
+    .s-input:focus,.s-select:focus{border-color:var(--burgundy)}
+    .preset-wrap{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:13px}
+    .preset{padding:5px 11px;border-radius:18px;border:1.5px solid var(--border);background:#fff;font-size:.74rem;cursor:pointer;font-family:'DM Sans',sans-serif;color:var(--charcoal);transition:all .15s}
+    .preset.on{border-color:var(--burgundy);background:#fdf0f2;color:var(--burgundy);font-weight:600}
+    .s-start{width:100%;padding:13px;background:var(--burgundy);color:#fff;border:none;border-radius:9px;font-family:'DM Sans',sans-serif;font-size:.93rem;font-weight:600;cursor:pointer;margin-top:4px}
+    .s-start:disabled{background:var(--muted);cursor:not-allowed}
+
+    /* RESUME BOX */
+    .resume-box{background:var(--success-bg);border:1.5px solid var(--success);border-radius:11px;padding:13px 15px;margin-bottom:18px}
+    .resume-title{font-size:.68rem;font-weight:700;color:var(--success);text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px}
+    .resume-name{font-size:.9rem;font-weight:600;margin-bottom:2px}
+    .resume-count{font-size:.73rem;color:var(--muted);margin-bottom:9px}
+    .resume-btns{display:flex;gap:8px}
+    .btn-resume{flex:1;padding:8px;background:var(--success);color:#fff;border:none;border-radius:7px;font-family:'DM Sans',sans-serif;font-size:.78rem;font-weight:600;cursor:pointer}
+    .btn-new-session{flex:1;padding:8px;background:#fff;color:var(--charcoal);border:1.5px solid var(--border);border-radius:7px;font-family:'DM Sans',sans-serif;font-size:.78rem;cursor:pointer}
+
+    /* TABS */
+    .tabs{background:#fff;border-bottom:2px solid var(--border);display:flex;overflow-x:auto;scrollbar-width:none}
+    .tabs::-webkit-scrollbar{display:none}
+    .tab{flex:1;min-width:90px;padding:12px 5px;border:none;background:none;font-family:'DM Sans',sans-serif;font-size:.68rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px;white-space:nowrap}
+    .tab.on{color:var(--burgundy);border-bottom-color:var(--burgundy)}
+
+    /* MAIN */
+    .main{flex:1;padding:15px 13px;max-width:700px;margin:0 auto;width:100%}
+    .err{background:#fdecea;border:1px solid #f5c6cb;border-radius:9px;padding:11px 13px;margin-bottom:13px;font-size:.77rem;color:#721c24;line-height:1.5}
+    .err strong{display:block;margin-bottom:2px}
+    .search-wrap{position:relative;margin-bottom:12px}
+    .search{width:100%;padding:11px 13px 11px 40px;border:2px solid var(--border);border-radius:11px;font-family:'DM Sans',sans-serif;font-size:.95rem;background:#fff;outline:none;color:var(--charcoal)}
+    .search:focus{border-color:var(--burgundy)}
+    .search-ico{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:.95rem;pointer-events:none}
+    .search-x{position:absolute;right:11px;top:50%;transform:translateY(-50%);background:var(--border);border:none;border-radius:50%;width:21px;height:21px;cursor:pointer;font-size:.68rem;color:var(--muted);display:flex;align-items:center;justify-content:center}
+    .sec-label{font-size:.63rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:7px;padding-left:2px}
+    .people{display:flex;flex-direction:column;gap:6px;margin-bottom:15px}
+    .person{background:#fff;border:1.5px solid var(--border);border-radius:11px;padding:11px 12px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;gap:9px}
+    .person:hover{border-color:var(--burgundy)}
+    .person.in{background:var(--success-bg);border-color:var(--success);cursor:default}
+    .p-info{display:flex;align-items:center;gap:9px;flex:1;min-width:0}
+    .avatar{width:37px;height:37px;border-radius:50%;background:var(--burgundy);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.82rem;flex-shrink:0}
+    .p-name{font-weight:600;font-size:.9rem}
+    .p-type{font-size:.66rem;color:var(--muted);margin-top:1px}
+    .checkin-btn{background:var(--burgundy);color:#fff;border:none;border-radius:7px;padding:6px 13px;font-family:'DM Sans',sans-serif;font-size:.75rem;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0}
+    .checked{display:flex;align-items:center;gap:4px;color:var(--success);font-size:.75rem;font-weight:600;flex-shrink:0}
+    .g-pills{display:flex;gap:9px;margin-bottom:13px;flex-wrap:wrap}
+    .g-pill{flex:1;min-width:120px;padding:9px 13px;border:1.5px solid var(--border);border-radius:9px;background:#fff;text-align:center;cursor:pointer}
+    .g-pill.on{border-color:var(--burgundy);background:#fdf0f2}
+    .g-pill-t{font-size:.82rem;font-weight:600}
+    .g-pill-s{font-size:.68rem;color:var(--muted);margin-top:2px}
+    .g-card{background:#fff;border:1.5px solid var(--border);border-radius:13px;padding:18px;margin-bottom:13px}
+    .g-title{font-family:'Playfair Display',serif;font-size:1.15rem;color:var(--burgundy);margin-bottom:3px}
+    .g-sub{font-size:.78rem;color:var(--muted);margin-bottom:13px;line-height:1.5}
+    .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+    .form-group{display:flex;flex-direction:column;gap:4px}
     .form-group.full{grid-column:1/-1}
-    .form-label{font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
-    .form-input,.form-select,.form-textarea{padding:10px 13px;border:1.5px solid var(--light-border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:.9rem;outline:none;transition:border-color .2s;color:var(--charcoal);background:white;width:100%}
+    .form-label{font-size:.67rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+    .form-input,.form-select,.form-textarea{padding:9px 11px;border:1.5px solid var(--border);border-radius:7px;font-family:'DM Sans',sans-serif;font-size:.86rem;outline:none;color:var(--charcoal);background:#fff;width:100%}
     .form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--burgundy)}
-    .form-textarea{min-height:75px;resize:vertical}
-    .interest-pills{display:flex;flex-wrap:wrap;gap:7px;margin-top:4px}
-    .interest-pill{padding:5px 13px;border-radius:20px;border:1.5px solid var(--light-border);background:white;font-size:.78rem;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s;color:var(--charcoal)}
-    .interest-pill.on{border-color:var(--burgundy);background:#fdf0f2;color:var(--burgundy);font-weight:600}
-    .form-submit{width:100%;margin-top:16px;padding:14px;background:var(--burgundy);color:white;border:none;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:1rem;font-weight:600;cursor:pointer;transition:background .2s}
+    .form-textarea{min-height:65px;resize:vertical}
+    .int-pills{display:flex;flex-wrap:wrap;gap:6px;margin-top:3px}
+    .int-pill{padding:4px 11px;border-radius:18px;border:1.5px solid var(--border);background:#fff;font-size:.74rem;cursor:pointer;font-family:'DM Sans',sans-serif;color:var(--charcoal)}
+    .int-pill.on{border-color:var(--burgundy);background:#fdf0f2;color:var(--burgundy);font-weight:600}
+    .form-submit{width:100%;margin-top:12px;padding:12px;background:var(--burgundy);color:#fff;border:none;border-radius:9px;font-family:'DM Sans',sans-serif;font-size:.92rem;font-weight:600;cursor:pointer}
     .form-submit:disabled{background:var(--muted);cursor:not-allowed}
-    .success-card{background:var(--success-light);border:1.5px solid var(--success);border-radius:14px;padding:28px 22px;text-align:center}
-    .success-icon{font-size:2.5rem;margin-bottom:12px}
-    .success-title{font-family:'Playfair Display',serif;font-size:1.35rem;color:var(--success);margin-bottom:8px}
-    .success-msg{font-size:.88rem;color:var(--muted);line-height:1.6;margin-bottom:18px}
-    .success-reset{background:var(--success);color:white;border:none;border-radius:8px;padding:10px 24px;font-family:'DM Sans',sans-serif;font-weight:600;cursor:pointer;font-size:.9rem}
-    .report-header{background:var(--burgundy);border-radius:14px;padding:20px;color:white;margin-bottom:18px}
-    .report-title{font-family:'Playfair Display',serif;font-size:1.15rem;margin-bottom:14px;color:var(--gold-light)}
-    .stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-    .stat-box{background:rgba(255,255,255,.12);border-radius:10px;padding:13px 8px;text-align:center}
-    .stat-num{font-family:'Playfair Display',serif;font-size:1.9rem;font-weight:700;color:var(--gold-light);line-height:1}
-    .stat-label{font-size:.66rem;color:rgba(255,255,255,.75);text-transform:uppercase;letter-spacing:.06em;margin-top:4px}
-    .guest-highlight{margin-top:11px;background:rgba(212,168,83,.2);border-radius:8px;padding:9px 13px;font-size:.8rem;color:var(--gold-light)}
-    .report-section{margin-bottom:18px}
-    .report-list{background:white;border:1.5px solid var(--light-border);border-radius:12px;overflow:hidden}
-    .report-row{display:flex;align-items:center;gap:10px;padding:11px 14px;border-bottom:1px solid var(--light-border);font-size:.86rem}
-    .report-row:last-child{border-bottom:none}
-    .report-row-num{color:var(--muted);font-size:.72rem;width:18px;flex-shrink:0}
-    .report-row-name{flex:1;font-weight:500}
-    .badge{font-size:.65rem;font-weight:700;padding:3px 8px;border-radius:20px;letter-spacing:.04em;text-transform:uppercase}
-    .badge-guest{background:#fff3cd;color:#856404}
-    .badge-member{background:#e8f0fe;color:#1a56a0}
-    .badge-time{font-size:.7rem;color:var(--muted)}
-    .action-btn{width:100%;padding:13px;background:white;color:var(--burgundy);border:2px solid var(--burgundy);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:.9rem;font-weight:600;cursor:pointer;transition:all .2s;margin-top:8px}
-    .action-btn.primary{background:var(--burgundy);color:white;border:none}
-    .empty-state{text-align:center;padding:40px 18px;color:var(--muted);font-size:.9rem;line-height:1.6}
-    .loading{text-align:center;padding:30px;color:var(--muted)}
-    .spinner{width:30px;height:30px;border:3px solid var(--light-border);border-top-color:var(--burgundy);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 12px}
+    .success-card{background:var(--success-bg);border:1.5px solid var(--success);border-radius:13px;padding:24px 18px;text-align:center}
+    .success-icon{font-size:2rem;margin-bottom:9px}
+    .success-title{font-family:'Playfair Display',serif;font-size:1.25rem;color:var(--success);margin-bottom:5px}
+    .success-msg{font-size:.82rem;color:var(--muted);line-height:1.6;margin-bottom:14px}
+    .success-reset{background:var(--success);color:#fff;border:none;border-radius:7px;padding:8px 20px;font-family:'DM Sans',sans-serif;font-weight:600;cursor:pointer;font-size:.85rem}
+    .rpt-hdr{background:var(--burgundy);border-radius:13px;padding:17px;color:#fff;margin-bottom:13px}
+    .rpt-title{font-family:'Playfair Display',serif;font-size:1.05rem;margin-bottom:2px;color:var(--gold-light)}
+    .rpt-session{font-size:.72rem;color:rgba(255,255,255,.65);margin-bottom:11px}
+    .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
+    .stat{background:rgba(255,255,255,.12);border-radius:9px;padding:11px 7px;text-align:center}
+    .stat-n{font-family:'Playfair Display',serif;font-size:1.7rem;font-weight:700;color:var(--gold-light);line-height:1}
+    .stat-l{font-size:.62rem;color:rgba(255,255,255,.72);text-transform:uppercase;letter-spacing:.05em;margin-top:2px}
+    .guest-hi{margin-top:9px;background:rgba(212,168,83,.2);border-radius:7px;padding:7px 11px;font-size:.75rem;color:var(--gold-light)}
+    .rpt-sec{margin-bottom:13px}
+    .rpt-list{background:#fff;border:1.5px solid var(--border);border-radius:11px;overflow:hidden}
+    .rpt-row{display:flex;align-items:center;gap:9px;padding:9px 12px;border-bottom:1px solid var(--border);font-size:.82rem}
+    .rpt-row:last-child{border-bottom:none}
+    .rpt-num{color:var(--muted);font-size:.68rem;width:17px;flex-shrink:0}
+    .rpt-name{flex:1;font-weight:500}
+    .badge{font-size:.6rem;font-weight:700;padding:2px 7px;border-radius:18px;letter-spacing:.04em;text-transform:uppercase}
+    .badge-g{background:#fff3cd;color:#856404}
+    .badge-m{background:#e8f0fe;color:#1a56a0}
+    .badge-t{font-size:.65rem;color:var(--muted)}
+    .act-btn{width:100%;padding:11px;background:#fff;color:var(--burgundy);border:2px solid var(--burgundy);border-radius:9px;font-family:'DM Sans',sans-serif;font-size:.85rem;font-weight:600;cursor:pointer;margin-top:7px}
+    .act-btn:hover{background:var(--burgundy);color:#fff}
+    .act-btn.primary{background:var(--burgundy);color:#fff;border:none}
+    .act-btn.danger{color:#c0392b;border-color:#c0392b}
+    .act-btn.danger:hover{background:#c0392b;color:#fff}
+    .empty{text-align:center;padding:32px 14px;color:var(--muted);font-size:.85rem;line-height:1.6}
+    .loading{text-align:center;padding:26px;color:var(--muted)}
+    .spinner{width:26px;height:26px;border:3px solid var(--border);border-top-color:var(--burgundy);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 9px}
     @keyframes spin{to{transform:rotate(360deg)}}
-    @media(max-width:480px){.form-grid{grid-template-columns:1fr}.header-church{font-size:.95rem}}
+    @media(max-width:480px){.form-grid{grid-template-columns:1fr}}
   </style>
 </head>
 <body>
 <div id="root"></div>
 <script type="text/babel">
-async function pcFetch(path,opts){
-  opts=opts||{};
-  const res=await fetch("/api/pc"+path,{method:opts.method||"GET",headers:{"Content-Type":"application/json"},body:opts.body||undefined});
-  if(!res.ok){const t=await res.text();throw new Error("API "+res.status+": "+t);}
-  return res.json();
+
+// ── STORAGE ───────────────────────────────────────────────────────────────────
+// Every check-in is saved immediately to localStorage.
+// Browser close, timeout, or refresh will NOT lose any data.
+const K = { session:'tmcbc_session', checked:'tmcbc_checked', guests:'tmcbc_guests' };
+const load = (k,fb) => { try{const v=localStorage.getItem(k);return v?JSON.parse(v):fb;}catch(e){return fb;} };
+const save = (k,v) => { try{localStorage.setItem(k,JSON.stringify(v));}catch(e){} };
+const clearSession = () => { localStorage.removeItem(K.session); localStorage.removeItem(K.checked); };
+
+// ── API ───────────────────────────────────────────────────────────────────────
+const pc = async (path,opts={}) => {
+  const r = await fetch('/api/pc'+path,{method:opts.method||'GET',headers:{'Content-Type':'application/json'},body:opts.body});
+  if(!r.ok){const t=await r.text();throw new Error('API '+r.status+': '+t);}
+  return r.json();
+};
+const fetchPeople = async (s='') => {
+  const q = s?`?where[search_name]=${encodeURIComponent(s)}&per_page=50`:'?per_page=100&order=last_name';
+  const d = await pc('/people/v2/people'+q);
+  return d.data.map(p=>({id:p.id,firstName:p.attributes.first_name,lastName:p.attributes.last_name,
+    name:p.attributes.first_name+' '+p.attributes.last_name,
+    membershipType:p.attributes.membership||'Member',
+    email:p.attributes.primary_email||'',phone:p.attributes.primary_phone_number||''}));
+};
+const getOrCreateEvent = async (label) => {
+  const d = await pc('/check_ins/v2/events?where[name_contains]=Sunday&per_page=20');
+  if(d.data.length>0) return d.data[0].id;
+  const c = await pc('/check_ins/v2/events',{method:'POST',body:JSON.stringify({data:{type:'Event',attributes:{name:label}}})});
+  return c.data.id;
+};
+const checkInPC = (pid,eid) => pc('/check_ins/v2/check_ins',{method:'POST',body:JSON.stringify({data:{type:'CheckIn',attributes:{kind:'Regular'},relationships:{person:{data:{type:'Person',id:pid}},event:{data:{type:'Event',id:eid}}}}})});
+const createGuestPC = async (g) => {
+  const vd = new Date().toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  const p = await pc('/people/v2/people',{method:'POST',body:JSON.stringify({data:{type:'Person',attributes:{first_name:g.firstName,last_name:g.lastName,primary_email:g.email,primary_phone_number:g.phone,street:g.address||'',city:g.city||'',state:g.state||'VA',zip:g.zip||'',membership:g.guestType==='first-time'?'First-Time Guest':'Returning Guest'}}})});
+  const pid=p.data.id;
+  const interests=(g.interestedIn||[]).join(', ')||'None';
+  await pc('/people/v2/people/'+pid+'/notes',{method:'POST',body:JSON.stringify({data:{type:'Note',attributes:{note:`Visit Date: ${vd}\nService: ${g.sessionLabel||''}\nGuest Type: ${g.guestType==='first-time'?'First-Time Guest':'Returning Guest'}\nHow They Heard: ${g.howHeard||'Not provided'}\nInterests: ${interests}\nPrayer Request: ${g.prayerRequest||'None'}`,note_category_id:null}}})}).catch(()=>{});
+  return pid;
+};
+
+// ── HELPERS ───────────────────────────────────────────────────────────────────
+const {useState,useEffect} = React;
+const nowStr = ()=>new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+const todayISO = ()=>new Date().toISOString().split('T')[0];
+const ini = p=>((p.firstName||'')[0]||'')+((p.lastName||'')[0]||'');
+const PRESETS = ['Sunday Morning Worship','Sunday Evening Service','Wednesday Bible Study','Special Event','Guest Sunday','Youth Sunday'];
+
+// ── SESSION SCREEN ────────────────────────────────────────────────────────────
+function SessionScreen({onStart}) {
+  const existing = load(K.session,null);
+  const savedChecked = load(K.checked,{});
+  const savedCount = Object.keys(savedChecked).length;
+  const [date,setDate] = useState(todayISO());
+  const [name,setName] = useState('Sunday Morning Worship');
+  const [showNew,setShowNew] = useState(!existing);
+
+  function start(){
+    if(!date||!name.trim()) return;
+    const dateLabel = new Date(date+'T12:00:00').toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
+    const sess = {date,dateLabel,name:name.trim(),label:name.trim()+' \u2014 '+dateLabel,startedAt:new Date().toISOString()};
+    clearSession();
+    save(K.session,sess);
+    onStart(sess,{});
+  }
+  function resume(){ onStart(existing,savedChecked); }
+
+  return (
+    <div className="session-wrap">
+      <div className="session-card">
+        <div className="session-title">The Mount Carmel Baptist Church</div>
+        <div className="session-sub">Sunday Worship Check-In</div>
+        <hr className="session-hr"/>
+        {existing&&!showNew&&(
+          <div className="resume-box">
+            <div className="resume-title">Session In Progress</div>
+            <div className="resume-name">{existing.label}</div>
+            <div className="resume-count">{savedCount} {savedCount===1?'person':'people'} checked in &mdash; no data lost</div>
+            <div className="resume-btns">
+              <button className="btn-resume" onClick={resume}>Resume Session</button>
+              <button className="btn-new-session" onClick={()=>setShowNew(true)}>Start New</button>
+            </div>
+          </div>
+        )}
+        {(!existing||showNew)&&(
+          <div>
+            <div className="s-label">Service Date</div>
+            <input type="date" className="s-input" value={date} onChange={e=>setDate(e.target.value)}/>
+            <div className="s-label">Service Name</div>
+            <div className="preset-wrap">
+              {PRESETS.map(p=><button key={p} className={'preset'+(name===p?' on':'')} onClick={()=>setName(p)}>{p}</button>)}
+            </div>
+            <input type="text" className="s-input" placeholder="Or type a custom name..." value={name} onChange={e=>setName(e.target.value)}/>
+            <button className="s-start" onClick={start} disabled={!date||!name.trim()}>Begin Check-In &rarr;</button>
+            {existing&&showNew&&(
+              <button style={{width:'100%',marginTop:'9px',padding:'9px',background:'#fff',border:'1.5px solid var(--border)',borderRadius:'9px',fontFamily:"'DM Sans',sans-serif",fontSize:'.82rem',cursor:'pointer',color:'var(--muted)'}} onClick={()=>setShowNew(false)}>Cancel</button>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
 }
-async function fetchPeople(s){s=s||"";const q=s?"?where[search_name]="+encodeURIComponent(s)+"&per_page=50":"?per_page=100&order=last_name";const d=await pcFetch("/people/v2/people"+q);return d.data.map(function(p){return{id:p.id,firstName:p.attributes.first_name,lastName:p.attributes.last_name,name:p.attributes.first_name+" "+p.attributes.last_name,membershipType:p.attributes.membership||"Member",email:p.attributes.primary_email||"",phone:p.attributes.primary_phone_number||""};});}
-async function getOrCreateEvent(){const d=await pcFetch("/check_ins/v2/events?where[name_contains]=Sunday&per_page=10");if(d.data.length>0)return d.data[0].id;const t=new Date().toISOString().split("T")[0];const c=await pcFetch("/check_ins/v2/events",{method:"POST",body:JSON.stringify({data:{type:"Event",attributes:{name:"Sunday Worship -- "+t}}})});return c.data.id;}
-async function checkInPC(pid,eid){await pcFetch("/check_ins/v2/check_ins",{method:"POST",body:JSON.stringify({data:{type:"CheckIn",attributes:{kind:"Regular"},relationships:{person:{data:{type:"Person",id:pid}},event:{data:{type:"Event",id:eid}}}}})});}
-async function createGuestPC(g){const vd=new Date().toLocaleDateString("en-US",{weekday:"long",year:"numeric",month:"long",day:"numeric"});const p=await pcFetch("/people/v2/people",{method:"POST",body:JSON.stringify({data:{type:"Person",attributes:{first_name:g.firstName,last_name:g.lastName,primary_email:g.email,primary_phone_number:g.phone,street:g.address||"",city:g.city||"",state:g.state||"VA",zip:g.zip||"",membership:g.guestType==="first-time"?"First-Time Guest":"Returning Guest"}}})});const pid=p.data.id;const in2=g.interestedIn&&g.interestedIn.length?g.interestedIn.join(", "):"None";await pcFetch("/people/v2/people/"+pid+"/notes",{method:"POST",body:JSON.stringify({data:{type:"Note",attributes:{note:"Visit Date: "+vd+"\nGuest Type: "+(g.guestType==="first-time"?"First-Time Guest":"Returning Guest")+"\nHow They Heard: "+(g.howHeard||"Not provided")+"\nInterests: "+in2+"\nPrayer Request: "+(g.prayerRequest||"None"),note_category_id:null}}})}).catch(function(){});return pid;}
-function saveLocal(g){try{const s=JSON.parse(localStorage.getItem("tmcbc_guests")||"[]");s.push(Object.assign({},g,{timestamp:new Date().toISOString()}));localStorage.setItem("tmcbc_guests",JSON.stringify(s));}catch(e){}}
-const{useState,useEffect}=React;
-const nowStr=()=>new Date().toLocaleTimeString("en-US",{hour:"2-digit",minute:"2-digit"});
-const todayStr=()=>new Date().toLocaleDateString("en-US",{weekday:"long",year:"numeric",month:"long",day:"numeric"});
-const ini=p=>((p.firstName||"")[0]||"")+((p.lastName||"")[0]||"");
-function App(){
-  const[tab,setTab]=useState("checkin");
-  const[people,setPeople]=useState([]);
-  const[search,setSearch]=useState("");
-  const[checkedIn,setCheckedIn]=useState({});
-  const[loading,setLoading]=useState(false);
-  const[error,setError]=useState(null);
-  const[eventId,setEventId]=useState(null);
-  useEffect(function(){setLoading(true);setError(null);Promise.all([getOrCreateEvent(),fetchPeople()]).then(function(r){setEventId(r[0]);setPeople(r[1]);}).catch(function(e){setError("Could not connect to Planning Center. Make sure PC_APP_ID and PC_SECRET are set in Vercel environment variables.");console.error(e);}).finally(function(){setLoading(false);});}, []);
-  useEffect(function(){if(search.length<2)return;const t=setTimeout(function(){setLoading(true);fetchPeople(search).then(function(p){setPeople(p);}).catch(function(){}).finally(function(){setLoading(false);});},400);return function(){clearTimeout(t);};}, [search]);
-  const filtered=people.filter(function(p){return!search||p.name.toLowerCase().indexOf(search.toLowerCase())>=0;});
-  function handleCheckIn(person){if(checkedIn[person.id])return;checkInPC(person.id,eventId).catch(function(e){console.error(e);});setCheckedIn(function(prev){const n=Object.assign({},prev);n[person.id]=Object.assign({},person,{time:nowStr(),type:"member"});return n;});}
-  const attendees=Object.values(checkedIn);
-  const members=attendees.filter(function(a){return a.type==="member";});
-  const guests=attendees.filter(function(a){return a.type!=="member";});
-  const firstTimers=attendees.filter(function(a){return a.type==="first-time";});
-  const returning=attendees.filter(function(a){return a.type==="second-time";});
-  function exportCSV(){const rows=[["Name","Type","Email","Phone","Time"]].concat(attendees.map(function(a){return[a.name,a.type,a.email||"",a.phone||"",a.time];}));const csv=rows.map(function(r){return r.map(function(c){return'"'+c+'"';}).join(",");}).join("\n");const url=URL.createObjectURL(new Blob([csv],{type:"text/csv"}));const a=document.createElement("a");a.href=url;a.download="TMCBC-"+new Date().toISOString().split("T")[0]+".csv";a.click();}
-  return(<div className="app"><div className="header"><div><div className="header-church">The Mount Carmel Baptist Church</div><div className="header-sub">Sunday Worship Check-In</div></div><div className="header-date"><div>{nowStr()}</div><strong>{new Date().toLocaleDateString("en-US",{month:"short",day:"numeric"})}</strong></div></div><div className="nav-tabs">{[["checkin","Check-In"],["guest","Guest Registration"],["report","Attendance Report"]].map(function(item){return(<button key={item[0]} className={"nav-tab"+(tab===item[0]?" active":"")} onClick={function(){setTab(item[0]);}}>{item[1]}</button>);})}</div><div className="main">{error&&(<div className="error-banner"><strong>Connection Error</strong>{error}</div>)}{tab==="checkin"&&(<div><div className="search-wrapper"><span className="search-icon">&#128269;</span><input className="search-input" placeholder="Search by name..." value={search} onChange={function(e){setSearch(e.target.value);}} autoComplete="off"/>{search&&<button className="search-clear" onClick={function(){setSearch("");}}>x</button>}</div>{loading?(<div className="loading"><div className="spinner"></div><div>Loading congregation...</div></div>):filtered.length===0?(<div className="empty-state">{search?"No results for that name. Try Guest Registration.":"No members loaded yet."}</div>):(<div><div className="section-label">{search?filtered.length+" result"+(filtered.length!==1?"s":""):"Congregation ("+people.length+")"}</div><div className="people-list">{filtered.map(function(person){const isIn=!!checkedIn[person.id];return(<div key={person.id} className={"person-card"+(isIn?" checked-in":"")} onClick={function(){if(!isIn)handleCheckIn(person);}}><div className="person-info"><div className="person-avatar">{ini(person)}</div><div><div className="person-name">{person.name}</div><div className="person-type">{person.membershipType}</div></div></div>{isIn?<div className="checked-badge">&#10003; {checkedIn[person.id].time}</div>:<button className="checkin-btn" onClick={function(e){e.stopPropagation();handleCheckIn(person);}}>Check In</button>}</div>);})}</div></div>)}</div>)}{tab==="guest"&&(<GuestForm eventId={eventId} onAdded={function(guest){setCheckedIn(function(prev){const n=Object.assign({},prev);n["g-"+Date.now()]=Object.assign({},guest,{time:nowStr()});return n;});}}/>)}{tab==="report"&&(<Report attendees={attendees} members={members} guests={guests} firstTimers={firstTimers} returning={returning} onCSV={exportCSV} onPrint={function(){window.print();}}/>)}</div></div>);
+
+// ── APP ───────────────────────────────────────────────────────────────────────
+function App() {
+  const [session,setSession] = useState(null);
+  const [tab,setTab] = useState('checkin');
+  const [people,setPeople] = useState([]);
+  const [search,setSearch] = useState('');
+  const [checked,setChecked] = useState({});
+  const [loading,setLoading] = useState(false);
+  const [error,setError] = useState(null);
+  const [eventId,setEventId] = useState(null);
+  const [time,setTime] = useState(nowStr());
+
+  useEffect(()=>{const t=setInterval(()=>setTime(nowStr()),30000);return()=>clearInterval(t);},[]);
+
+  function handleStart(sess,savedChecked){
+    setSession(sess); setChecked(savedChecked); setLoading(true); setError(null);
+    Promise.all([getOrCreateEvent(sess.label),fetchPeople()])
+      .then(([eid,ppl])=>{setEventId(eid);setPeople(ppl);})
+      .catch(e=>{setError('Could not connect to Planning Center. Check PC_APP_ID and PC_SECRET in Vercel.');console.error(e);})
+      .finally(()=>setLoading(false));
+  }
+
+  useEffect(()=>{
+    if(!session||search.length<2) return;
+    const t=setTimeout(()=>{setLoading(true);fetchPeople(search).then(setPeople).catch(()=>{}).finally(()=>setLoading(false));},400);
+    return()=>clearTimeout(t);
+  },[search,session]);
+
+  const filtered=people.filter(p=>!search||p.name.toLowerCase().includes(search.toLowerCase()));
+
+  function doCheckIn(person){
+    if(checked[person.id]) return;
+    if(eventId) checkInPC(person.id,eventId).catch(e=>console.error(e));
+    const next={...checked,[person.id]:{...person,time:nowStr(),type:'member'}};
+    setChecked(next);
+    save(K.checked,next); // saved immediately -- survives any browser event
+  }
+
+  function addGuest(guest){
+    const key='g-'+Date.now();
+    const next={...checked,[key]:{...guest,time:nowStr()}};
+    setChecked(next);
+    save(K.checked,next); // saved immediately
+    const gs=load(K.guests,[]);
+    gs.push({...guest,timestamp:new Date().toISOString()});
+    save(K.guests,gs);
+  }
+
+  function endSession(){
+    if(!window.confirm('End this session and clear the check-in list?\n\nAll data is already saved in Planning Center. This only clears the screen so you can start fresh.')) return;
+    clearSession(); setSession(null); setChecked({}); setSearch(''); setTab('checkin');
+  }
+
+  const attendees=Object.values(checked);
+  const members=attendees.filter(a=>a.type==='member');
+  const guests=attendees.filter(a=>a.type!=='member');
+  const firstTimers=attendees.filter(a=>a.type==='first-time');
+  const returning=attendees.filter(a=>a.type==='second-time');
+
+  function exportCSV(){
+    const rows=[['Name','Type','Email','Phone','Time','Service'],...attendees.map(a=>[a.name,a.type,a.email||'',a.phone||'',a.time,session?.label||''])];
+    const csv=rows.map(r=>r.map(c=>'"'+c+'"').join(',')).join('\n');
+    const url=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+    Object.assign(document.createElement('a'),{href:url,download:'TMCBC-'+(session?.date||todayISO())+'.csv'}).click();
+  }
+
+  if(!session) return <SessionScreen onStart={handleStart}/>;
+
+  return (
+    <div className="app">
+      <div className="hdr">
+        <div>
+          <div className="hdr-church">The Mount Carmel Baptist Church</div>
+          <div className="hdr-sub">Sunday Worship Check-In</div>
+        </div>
+        <div className="hdr-right">
+          <div className="hdr-session">{session.name}</div>
+          <div className="hdr-time">{session.dateLabel} &bull; {time}</div>
+          <button className="hdr-change" onClick={()=>setSession(null)}>Change Session</button>
+        </div>
+      </div>
+      <div className="tabs">
+        {[['checkin','Check-In'],['guest','Guest Registration'],['report','Attendance Report']].map(([k,l])=>
+          <button key={k} className={'tab'+(tab===k?' on':'')} onClick={()=>setTab(k)}>{l}</button>)}
+      </div>
+      <div className="main">
+        {error&&<div className="err"><strong>Connection Error</strong>{error}</div>}
+        {tab==='checkin'&&(
+          <div>
+            <div className="search-wrap">
+              <span className="search-ico">&#128269;</span>
+              <input className="search" placeholder="Search by name..." value={search} onChange={e=>setSearch(e.target.value)} autoComplete="off"/>
+              {search&&<button className="search-x" onClick={()=>setSearch('')}>x</button>}
+            </div>
+            {loading?<div className="loading"><div className="spinner"></div><div>Loading congregation...</div></div>
+            :filtered.length===0?<div className="empty">{search?`No results for "${search}". Is this their first visit? Use Guest Registration.`:'No members loaded yet.'}</div>
+            :<div>
+              <div className="sec-label">{search?filtered.length+' result'+(filtered.length!==1?'s':''):'Congregation ('+people.length+')'}</div>
+              <div className="people">
+                {filtered.map(p=>{
+                  const isIn=!!checked[p.id];
+                  return(
+                    <div key={p.id} className={'person'+(isIn?' in':'')} onClick={()=>!isIn&&doCheckIn(p)}>
+                      <div className="p-info">
+                        <div className="avatar">{ini(p)}</div>
+                        <div><div className="p-name">{p.name}</div><div className="p-type">{p.membershipType}</div></div>
+                      </div>
+                      {isIn?<div className="checked">&#10003; {checked[p.id].time}</div>
+                           :<button className="checkin-btn" onClick={e=>{e.stopPropagation();doCheckIn(p);}}>Check In</button>}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>}
+          </div>
+        )}
+        {tab==='guest'&&<GuestForm eventId={eventId} session={session} onAdded={addGuest}/>}
+        {tab==='report'&&<Report attendees={attendees} members={members} guests={guests} firstTimers={firstTimers} returning={returning} session={session} onCSV={exportCSV} onPrint={()=>window.print()} onEnd={endSession}/>}
+      </div>
+    </div>
+  );
 }
-function GuestForm(props){
-  const INTERESTS=["Membership","Baptism","Bible Study","Volunteering","Youth Ministry","Prayer Team"];
-  const blank={firstName:"",lastName:"",email:"",phone:"",address:"",city:"",state:"VA",zip:"",howHeard:"",prayerRequest:"",interestedIn:[]};
-  const[guestType,setGuestType]=useState("first-time");
-  const[form,setForm]=useState(blank);
-  const[done,setDone]=useState(false);
-  const[doneFor,setDoneFor]=useState("");
-  const[busy,setBusy]=useState(false);
-  function set(k,v){setForm(function(p){const n=Object.assign({},p);n[k]=v;return n;});}
-  function toggleInterest(item){setForm(function(p){const n=Object.assign({},p);n.interestedIn=p.interestedIn.indexOf(item)>=0?p.interestedIn.filter(function(i){return i!==item;}):p.interestedIn.concat([item]);return n;});}
-  function submit(){if(!form.firstName||!form.lastName)return;setBusy(true);const g=Object.assign({},form,{guestType:guestType,name:form.firstName+" "+form.lastName,type:guestType});const finish=function(id){if(id)g.id=id;saveLocal(g);props.onAdded(g);setDoneFor(form.firstName+" "+form.lastName);setDone(true);setBusy(false);};createGuestPC(g).then(function(pid){return checkInPC(pid,props.eventId).then(function(){return pid;});}).then(function(pid){finish(pid);}).catch(function(e){console.error(e);finish(null);});}
-  if(done)return(<div className="success-card"><div className="success-icon">&#128591;</div><div className="success-title">Welcome, {doneFor}!</div><div className="success-msg">We are so glad you are here today. Your information has been recorded in Planning Center. Someone from Mount Carmel will reach out to you this week.</div><button className="success-reset" onClick={function(){setDone(false);setForm(blank);}}>Register Another Guest</button></div>);
-  return(<div><div className="guest-type-pills">{[["first-time","First-Time Guest","First visit to TMCBC"],["second-time","Returning Guest","Visited before"]].map(function(item){return(<div key={item[0]} className={"guest-pill"+(guestType===item[0]?" selected":"")} onClick={function(){setGuestType(item[0]);}}><div className="guest-pill-title">{item[1]}</div><div className="guest-pill-sub">{item[2]}</div></div>);})}</div><div className="guest-form-card"><div className="form-title">{guestType==="first-time"?"Welcome to Mount Carmel!":"Welcome Back!"}</div><div className="form-subtitle">{guestType==="first-time"?"We are honored to have you. Share a little about yourself so our team can follow up.":"Great to see you again! Please confirm your information below."}</div><div className="form-grid"><div className="form-group"><label className="form-label">First Name *</label><input className="form-input" value={form.firstName} onChange={function(e){set("firstName",e.target.value);}} placeholder="First name"/></div><div className="form-group"><label className="form-label">Last Name *</label><input className="form-input" value={form.lastName} onChange={function(e){set("lastName",e.target.value);}} placeholder="Last name"/></div><div className="form-group full"><label className="form-label">Email</label><input className="form-input" type="email" value={form.email} onChange={function(e){set("email",e.target.value);}} placeholder="your@email.com"/></div><div className="form-group full"><label className="form-label">Phone</label><input className="form-input" type="tel" value={form.phone} onChange={function(e){set("phone",e.target.value);}} placeholder="(804) 000-0000"/></div><div className="form-group full"><label className="form-label">Street Address</label><input className="form-input" value={form.address} onChange={function(e){set("address",e.target.value);}} placeholder="123 Main Street"/></div><div className="form-group"><label className="form-label">City</label><input className="form-input" value={form.city} onChange={function(e){set("city",e.target.value);}} placeholder="Richmond"/></div><div className="form-group"><label className="form-label">ZIP</label><input className="form-input" value={form.zip} onChange={function(e){set("zip",e.target.value);}} placeholder="23223"/></div><div className="form-group full"><label className="form-label">How did you hear about us?</label><select className="form-select" value={form.howHeard} onChange={function(e){set("howHeard",e.target.value);}}><option value="">Select one...</option><option>Friend / Family Member</option><option>Social Media</option><option>Website / Google</option><option>Drove by the church</option><option>Community event</option><option>YouTube</option><option>Other</option></select></div><div className="form-group full"><label className="form-label">Interested in...</label><div className="interest-pills">{INTERESTS.map(function(item){return(<button key={item} className={"interest-pill"+(form.interestedIn.indexOf(item)>=0?" on":"")} onClick={function(){toggleInterest(item);}}>{item}</button>);})}</div></div><div className="form-group full"><label className="form-label">Prayer Request</label><textarea className="form-textarea" value={form.prayerRequest} onChange={function(e){set("prayerRequest",e.target.value);}} placeholder="Share anything you would like us to pray for..."/></div></div><button className="form-submit" onClick={submit} disabled={!form.firstName||!form.lastName||busy}>{busy?"Submitting...":"Complete Check-In"}</button></div></div>);
+
+// ── GUEST FORM ────────────────────────────────────────────────────────────────
+function GuestForm({eventId,session,onAdded}){
+  const INTERESTS=['Membership','Baptism','Bible Study','Volunteering','Youth Ministry','Prayer Team'];
+  const blank={firstName:'',lastName:'',email:'',phone:'',address:'',city:'',state:'VA',zip:'',howHeard:'',prayerRequest:'',interestedIn:[]};
+  const [gType,setGType]=useState('first-time');
+  const [form,setForm]=useState(blank);
+  const [done,setDone]=useState(false);
+  const [doneFor,setDoneFor]=useState('');
+  const [busy,setBusy]=useState(false);
+  const set=(k,v)=>setForm(p=>({...p,[k]:v}));
+  const toggle=item=>setForm(p=>({...p,interestedIn:p.interestedIn.includes(item)?p.interestedIn.filter(i=>i!==item):[...p.interestedIn,item]}));
+  function submit(){
+    if(!form.firstName||!form.lastName) return;
+    setBusy(true);
+    const g={...form,guestType:gType,name:form.firstName+' '+form.lastName,type:gType,sessionLabel:session?.label||''};
+    const finish=id=>{if(id)g.id=id;onAdded(g);setDoneFor(form.firstName+' '+form.lastName);setDone(true);setBusy(false);};
+    createGuestPC(g).then(pid=>checkInPC(pid,eventId).then(()=>pid)).then(finish).catch(e=>{console.error(e);finish(null);});
+  }
+  if(done) return(
+    <div className="success-card">
+      <div className="success-icon">&#128591;</div>
+      <div className="success-title">Welcome, {doneFor}!</div>
+      <div className="success-msg">We are so glad you are here today. Your information has been recorded in Planning Center. Someone from Mount Carmel will reach out to you this week.</div>
+      <button className="success-reset" onClick={()=>{setDone(false);setForm(blank);}}>Register Another Guest</button>
+    </div>
+  );
+  return(
+    <div>
+      <div className="g-pills">
+        {[['first-time','First-Time Guest','First visit to TMCBC'],['second-time','Returning Guest','Visited before']].map(([k,t,s])=>(
+          <div key={k} className={'g-pill'+(gType===k?' on':'')} onClick={()=>setGType(k)}>
+            <div className="g-pill-t">{t}</div><div className="g-pill-s">{s}</div>
+          </div>
+        ))}
+      </div>
+      <div className="g-card">
+        <div className="g-title">{gType==='first-time'?'Welcome to Mount Carmel!':'Welcome Back!'}</div>
+        <div className="g-sub">{gType==='first-time'?'We are honored to have you. Share a little about yourself so our team can follow up.':'Great to see you again! Please confirm your information below.'}</div>
+        <div className="form-grid">
+          <div className="form-group"><label className="form-label">First Name *</label><input className="form-input" value={form.firstName} onChange={e=>set('firstName',e.target.value)} placeholder="First name"/></div>
+          <div className="form-group"><label className="form-label">Last Name *</label><input className="form-input" value={form.lastName} onChange={e=>set('lastName',e.target.value)} placeholder="Last name"/></div>
+          <div className="form-group full"><label className="form-label">Email</label><input className="form-input" type="email" value={form.email} onChange={e=>set('email',e.target.value)} placeholder="your@email.com"/></div>
+          <div className="form-group full"><label className="form-label">Phone</label><input className="form-input" type="tel" value={form.phone} onChange={e=>set('phone',e.target.value)} placeholder="(804) 000-0000"/></div>
+          <div className="form-group full"><label className="form-label">Street Address</label><input className="form-input" value={form.address} onChange={e=>set('address',e.target.value)} placeholder="123 Main Street"/></div>
+          <div className="form-group"><label className="form-label">City</label><input className="form-input" value={form.city} onChange={e=>set('city',e.target.value)} placeholder="Richmond"/></div>
+          <div className="form-group"><label className="form-label">ZIP</label><input className="form-input" value={form.zip} onChange={e=>set('zip',e.target.value)} placeholder="23223"/></div>
+          <div className="form-group full"><label className="form-label">How did you hear about us?</label>
+            <select className="form-select" value={form.howHeard} onChange={e=>set('howHeard',e.target.value)}>
+              <option value="">Select one...</option><option>Friend / Family Member</option><option>Social Media (Facebook/Instagram)</option><option>Website / Google Search</option><option>Drove by the church</option><option>Community event</option><option>YouTube</option><option>Other</option>
+            </select>
+          </div>
+          <div className="form-group full"><label className="form-label">Interested in learning more about...</label>
+            <div className="int-pills">{INTERESTS.map(i=><button key={i} className={'int-pill'+(form.interestedIn.includes(i)?' on':'')} onClick={()=>toggle(i)}>{i}</button>)}</div>
+          </div>
+          <div className="form-group full"><label className="form-label">Prayer Request (optional)</label>
+            <textarea className="form-textarea" value={form.prayerRequest} onChange={e=>set('prayerRequest',e.target.value)} placeholder="Share anything you would like us to pray for..."/>
+          </div>
+        </div>
+        <button className="form-submit" onClick={submit} disabled={!form.firstName||!form.lastName||busy}>{busy?'Submitting...':'Complete Check-In \u2192'}</button>
+      </div>
+    </div>
+  );
 }
-function Report(props){
-  const{attendees,members,guests,firstTimers,returning,onCSV,onPrint}=props;
-  return(<div><div className="report-header"><div className="report-title">Attendance Report</div><div style={{fontSize:".76rem",color:"rgba(255,255,255,.7)",marginBottom:"14px"}}>{todayStr()}</div><div className="stats-grid"><div className="stat-box"><div className="stat-num">{attendees.length}</div><div className="stat-label">Total</div></div><div className="stat-box"><div className="stat-num">{members.length}</div><div className="stat-label">Members</div></div><div className="stat-box"><div className="stat-num">{guests.length}</div><div className="stat-label">Guests</div></div></div>{firstTimers.length>0&&(<div className="guest-highlight">{firstTimers.length} first-time guest{firstTimers.length!==1?"s":""} today{returning.length>0?" -- "+returning.length+" returning":""}</div>)}</div>{attendees.length===0?(<div className="empty-state">No one has checked in yet.</div>):(<div>{guests.length>0&&(<div className="report-section"><div className="section-label">Guests ({guests.length})</div><div className="report-list">{guests.map(function(a,i){return(<div key={a.id||i} className="report-row"><span className="report-row-num">{i+1}</span><span className="report-row-name">{a.name}</span><span className={"badge "+(a.type==="first-time"?"badge-guest":"badge-member")}>{a.type==="first-time"?"1st Visit":"2nd Visit"}</span><span className="badge-time">{a.time}</span></div>);})}</div></div>)}<div className="report-section"><div className="section-label">Members ({members.length})</div><div className="report-list">{members.map(function(a,i){return(<div key={a.id||i} className="report-row"><span className="report-row-num">{i+1}</span><span className="report-row-name">{a.name}</span><span className="badge badge-member">Member</span><span className="badge-time">{a.time}</span></div>);})}</div></div><button className="action-btn" onClick={onCSV}>Export CSV</button><button className="action-btn primary" onClick={onPrint} style={{marginTop:"8px"}}>Print Report</button></div>)}</div>);
+
+// ── REPORT ────────────────────────────────────────────────────────────────────
+function Report({attendees,members,guests,firstTimers,returning,session,onCSV,onPrint,onEnd}){
+  return(
+    <div>
+      <div className="rpt-hdr">
+        <div className="rpt-title">Attendance Report</div>
+        {session&&<div className="rpt-session">{session.label}</div>}
+        <div className="stats">
+          <div className="stat"><div className="stat-n">{attendees.length}</div><div className="stat-l">Total</div></div>
+          <div className="stat"><div className="stat-n">{members.length}</div><div className="stat-l">Members</div></div>
+          <div className="stat"><div className="stat-n">{guests.length}</div><div className="stat-l">Guests</div></div>
+        </div>
+        {firstTimers.length>0&&<div className="guest-hi">{firstTimers.length} first-time guest{firstTimers.length!==1?'s':''} today{returning.length>0?` \u00b7 ${returning.length} returning`:''}</div>}
+      </div>
+      {attendees.length===0?<div className="empty">No one has checked in yet.</div>:(
+        <div>
+          {guests.length>0&&<div className="rpt-sec"><div className="sec-label">Guests ({guests.length})</div><div className="rpt-list">{guests.map((a,i)=><div key={a.id||i} className="rpt-row"><span className="rpt-num">{i+1}</span><span className="rpt-name">{a.name}</span><span className={'badge '+(a.type==='first-time'?'badge-g':'badge-m')}>{a.type==='first-time'?'1st Visit':'2nd Visit'}</span><span className="badge-t">{a.time}</span></div>)}</div></div>}
+          <div className="rpt-sec"><div className="sec-label">Members ({members.length})</div><div className="rpt-list">{members.map((a,i)=><div key={a.id||i} className="rpt-row"><span className="rpt-num">{i+1}</span><span className="rpt-name">{a.name}</span><span className="badge badge-m">Member</span><span className="badge-t">{a.time}</span></div>)}</div></div>
+          <button className="act-btn" onClick={onCSV}>Export CSV</button>
+          <button className="act-btn primary" style={{marginTop:'7px'}} onClick={onPrint}>Print Report</button>
+        </div>
+      )}
+      <button className="act-btn danger" style={{marginTop:'14px'}} onClick={onEnd}>End Session &amp; Start Fresh</button>
+    </div>
+  );
 }
-ReactDOM.createRoot(document.getElementById("root")).render(React.createElement(App));
+
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(App));
 </script>
 </body>
 </html>
