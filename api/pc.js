@@ -9,16 +9,16 @@ export default async function handler(req, res) {
 
   const PC_APP_ID = process.env.PC_APP_ID;
   const PC_SECRET = process.env.PC_SECRET;
-  if (!PC_APP_ID || !PC_SECRET) return res.status(500).json({ error: "Credentials not configured" });
+  if (!PC_APP_ID || !PC_SECRET) {
+    return res.status(500).json({ error: "Credentials not configured" });
+  }
 
-  const { path } = req.query;
-  if (!path) return res.status(400).json({ error: "Missing path" });
+  // Extract the PC path from the request URL
+  // e.g. /api/pc/people/v2/people -> /people/v2/people
+  const reqUrl = req.url || "";
+  const pcPath = reqUrl.replace(/^\/api\/pc/, "") || "/";
 
-  const pcPath = Array.isArray(path) ? "/" + path.join("/") : path;
-  const queryParams = { ...req.query };
-  delete queryParams.path;
-  const queryString = new URLSearchParams(queryParams).toString();
-  const fullUrl = PC_BASE + pcPath + (queryString ? "?" + queryString : "");
+  const fullUrl = PC_BASE + pcPath;
 
   try {
     const pcRes = await fetch(fullUrl, {
@@ -30,8 +30,14 @@ export default async function handler(req, res) {
       },
       body: req.method !== "GET" && req.body ? JSON.stringify(req.body) : undefined,
     });
-    const data = await pcRes.json();
-    return res.status(pcRes.status).json(data);
+
+    const text = await pcRes.text();
+    try {
+      const data = JSON.parse(text);
+      return res.status(pcRes.status).json(data);
+    } catch (e) {
+      return res.status(pcRes.status).send(text);
+    }
   } catch (err) {
     return res.status(500).json({ error: err.message });
   }
