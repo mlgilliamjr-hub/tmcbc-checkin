@@ -1,6 +1,6 @@
 {
-  "rewrites": [
-    { "source": "/api/pc/:path*", "destination": "/api/pc?path=/:path*" },
-    { "source": "/(.*)", "destination": "/public/index.html" }
+  "routes": [
+    { "src": "/api/pc/(.*)", "dest": "/api/pc" },
+    { "src": "/(.*)", "dest": "/public/index.html" }
   ]
 }
