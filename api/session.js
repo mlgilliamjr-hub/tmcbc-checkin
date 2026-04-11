@@ -1,10 +1,27 @@
-// api/session.js -- Vercel KV session sync endpoint
-// Handles real-time check-in sync across multiple devices
-// Uses Vercel KV (Redis) for shared persistent state
+// api/session.js -- Multi-device check-in sync via Upstash Redis REST API
+// No npm packages needed -- uses fetch directly with env vars Vercel injects
 
-import { kv } from '@vercel/kv';
+const TTL = 86400; // 24 hours
 
-const SESSION_TTL = 60 * 60 * 24; // 24 hours
+async function redis(method, ...args) {
+  const url = process.env.KV_REST_API_URL;
+  const token = process.env.KV_REST_API_TOKEN;
+  const res = await fetch(`${url}/${[method, ...args].map(encodeURIComponent).join('/')}`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  return res.json();
+}
+
+async function redisPost(body) {
+  const url = process.env.KV_REST_API_URL;
+  const token = process.env.KV_REST_API_TOKEN;
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+  return res.json();
+}
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -15,33 +32,39 @@ export default async function handler(req, res) {
   const { action } = req.query;
 
   try {
-    // ── GET: poll for current session state ──────────────────────────────────
+    // GET: poll current session state
     if (req.method === 'GET' && action === 'poll') {
-      const session   = await kv.get('tmcbc:session');
-      const checkedIn = await kv.hgetall('tmcbc:checkedIn') || {};
+      const sessionRes = await redis('GET', 'tmcbc:session');
+      const session = sessionRes.result ? JSON.parse(sessionRes.result) : null;
+      const rawRes = await redis('HGETALL', 'tmcbc:checkedIn');
+      const checkedIn = {};
+      const pairs = rawRes.result || [];
+      for (let i = 0; i < pairs.length; i += 2) {
+        try { checkedIn[pairs[i]] = JSON.parse(pairs[i + 1]); } catch(e) { checkedIn[pairs[i]] = pairs[i+1]; }
+      }
       return res.json({ session, checkedIn });
     }
 
-    // ── POST: start a new session ─────────────────────────────────────────────
+    // POST: start new session
     if (req.method === 'POST' && action === 'start') {
       const { session } = req.body;
-      await kv.set('tmcbc:session', session, { ex: SESSION_TTL });
-      await kv.del('tmcbc:checkedIn');
+      await redisPost(['SET', 'tmcbc:session', JSON.stringify(session), 'EX', TTL]);
+      await redis('DEL', 'tmcbc:checkedIn');
       return res.json({ ok: true });
     }
 
-    // ── POST: record a single check-in ────────────────────────────────────────
+    // POST: record a check-in
     if (req.method === 'POST' && action === 'checkin') {
       const { key, person } = req.body;
-      await kv.hset('tmcbc:checkedIn', { [key]: JSON.stringify(person) });
-      await kv.expire('tmcbc:checkedIn', SESSION_TTL);
+      await redisPost(['HSET', 'tmcbc:checkedIn', key, JSON.stringify(person)]);
+      await redis('EXPIRE', 'tmcbc:checkedIn', TTL);
       return res.json({ ok: true });
     }
 
-    // ── DELETE: end session and clear KV ─────────────────────────────────────
+    // DELETE: end session
     if (req.method === 'DELETE' && action === 'end') {
-      await kv.del('tmcbc:session');
-      await kv.del('tmcbc:checkedIn');
+      await redis('DEL', 'tmcbc:session');
+      await redis('DEL', 'tmcbc:checkedIn');
       return res.json({ ok: true });
     }
 
