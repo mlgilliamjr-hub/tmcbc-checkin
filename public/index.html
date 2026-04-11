@@ -284,8 +284,32 @@ function App() {
     save(K.guests,gs);
   }
 
+  const SHEETS_WEBHOOK = 'https://script.google.com/macros/s/AKfycbw2gNOANQ0bDcc_DlaUiy-gur-fHGqdA9iFXPmW_O-m-dkkEAQ6hUWHT--nkl48MBL8/exec';
+
+  function sendToSheets(sess, checked) {
+    const all = Object.values(checked);
+    const members = all.filter(a=>a.type==='member');
+    const guests = all.filter(a=>a.type!=='member');
+    const payload = {
+      sessionName: sess.name,
+      sessionLabel: sess.label,
+      sessionDate: sess.date,
+      totalCount: all.length,
+      memberCount: members.length,
+      guestCount: guests.length,
+      firstTimeCount: guests.filter(g=>g.type==='first-time').length,
+      returningCount: guests.filter(g=>g.type==='second-time').length,
+      members: members.map(m=>({name:m.name,membershipType:m.membershipType,time:m.time})),
+      guests: guests.map(g=>({name:g.name,type:g.type,time:g.time,email:g.email||'',phone:g.phone||'',address:g.address||'',city:g.city||'',zip:g.zip||'',howHeard:g.howHeard||'',interestedIn:g.interestedIn||[],prayerRequest:g.prayerRequest||''}))
+    };
+    fetch(SHEETS_WEBHOOK, {method:'POST',body:JSON.stringify(payload),mode:'no-cors'})
+      .then(()=>console.log('Attendance sent to Google Sheets'))
+      .catch(e=>console.error('Sheets error:',e));
+  }
+
   function endSession(){
     if(!window.confirm('End this session and clear the check-in list?\n\nAll data is already saved in Planning Center. This only clears the screen so you can start fresh.')) return;
+    sendToSheets(session, checked);
     clearSession(); setSession(null); setChecked({}); setSearch(''); setTab('checkin');
   }
 
