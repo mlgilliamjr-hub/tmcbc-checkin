@@ -153,7 +153,7 @@ const fetchPeople = async (s='') => {
   const q = s?`?where[search_name]=${encodeURIComponent(s)}&per_page=50`:'?per_page=100&order=last_name';
   const d = await pc('/people/v2/people'+q);
   return d.data.map(p=>({id:p.id,firstName:p.attributes.first_name,lastName:p.attributes.last_name,
-    name:p.attributes.first_name+' '+p.attributes.last_name,
+    name:p.attributes.first_name+' '+p.attributes.last_name+(p.attributes.suffix?' '+p.attributes.suffix:''),
     membershipType:p.attributes.membership||'Member',
     email:p.attributes.primary_email||'',phone:p.attributes.primary_phone_number||''}));
 };
@@ -195,7 +195,7 @@ function SessionScreen({onStart}) {
     const sess = {date,dateLabel,name:name.trim(),label:name.trim()+' \u2014 '+dateLabel,startedAt:new Date().toISOString()};
     clearSession();
     save(K.session,sess);
-    onStart(sess,{});
+    onStart(sess,{},false);
   }
   function resume(){ onStart(existing,savedChecked); }
 
@@ -250,8 +250,40 @@ function App() {
 
   useEffect(()=>{const t=setInterval(()=>setTime(nowStr()),30000);return()=>clearInterval(t);},[]);
 
-  function handleStart(sess,savedChecked){
+  // Multi-device sync: poll KV every 4 seconds and merge remote check-ins
+  useEffect(()=>{
+    if(!session) return;
+    const t=setInterval(()=>{
+      fetch('/api/session?action=poll')
+        .then(r=>r.json())
+        .then(data=>{
+          if(!data.checkedIn) return;
+          // Parse stringified values from hgetall
+          const remote={};
+          Object.entries(data.checkedIn).forEach(([k,v])=>{
+            try{remote[k]=typeof v==='string'?JSON.parse(v):v;}catch(e){remote[k]=v;}
+          });
+          setChecked(prev=>{
+            // Merge remote into local -- remote wins for new keys, local wins for edits
+            const merged={...remote,...prev};
+            // If remote has keys we don't -- add them silently
+            let changed=false;
+            Object.keys(remote).forEach(k=>{if(!prev[k]){changed=true;}});
+            if(changed){save(K.checked,merged);}
+            return changed?merged:prev;
+          });
+        })
+        .catch(()=>{}); // silently fail -- local data always preserved
+    },4000);
+    return()=>clearInterval(t);
+  },[session]);
+
+  function handleStart(sess,savedChecked,isResume){
     setSession(sess); setChecked(savedChecked); setLoading(true); setError(null);
+    // Push new session to KV (all devices share this session)
+    if(!isResume){
+      fetch('/api/session?action=start',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({session:sess})}).catch(e=>console.error('KV start:',e));
+    }
     Promise.all([getOrCreateEvent(sess.label),fetchPeople()])
       .then(([eid,ppl])=>{setEventId(eid);setPeople(ppl);})
       .catch(e=>{setError('Could not connect to Planning Center. Check PC_APP_ID and PC_SECRET in Vercel.');console.error(e);})
@@ -269,16 +301,22 @@ function App() {
   function doCheckIn(person){
     if(checked[person.id]) return;
     if(eventId) checkInPC(person.id,eventId).catch(e=>console.error(e));
-    const next={...checked,[person.id]:{...person,time:nowStr(),type:'member'}};
+    const entry={...person,time:nowStr(),type:'member'};
+    const next={...checked,[person.id]:entry};
     setChecked(next);
-    save(K.checked,next); // saved immediately -- survives any browser event
+    save(K.checked,next); // local backup
+    // sync to KV so all devices see it
+    fetch('/api/session?action=checkin',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:person.id,person:entry})}).catch(e=>console.error('KV sync:',e));
   }
 
   function addGuest(guest){
     const key='g-'+Date.now();
-    const next={...checked,[key]:{...guest,time:nowStr()}};
+    const entry={...guest,time:nowStr()};
+    const next={...checked,[key]:entry};
     setChecked(next);
-    save(K.checked,next); // saved immediately
+    save(K.checked,next); // local backup
+    // sync to KV so all devices see it
+    fetch('/api/session?action=checkin',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key,person:entry})}).catch(e=>console.error('KV sync:',e));
     const gs=load(K.guests,[]);
     gs.push({...guest,timestamp:new Date().toISOString()});
     save(K.guests,gs);
@@ -310,6 +348,7 @@ function App() {
   function endSession(){
     if(!window.confirm('End this session and clear the check-in list?\n\nAll data is already saved in Planning Center. This only clears the screen so you can start fresh.')) return;
     sendToSheets(session, checked);
+    fetch('/api/session?action=end',{method:'DELETE'}).catch(()=>{});
     clearSession(); setSession(null); setChecked({}); setSearch(''); setTab('checkin');
   }
 
@@ -336,7 +375,7 @@ function App() {
           <div className="hdr-sub">Sunday Worship Check-In</div>
         </div>
         <div className="hdr-right">
-          <div className="hdr-session">{session.name}</div>
+          <div className="hdr-session">{session.name} &bull; {Object.keys(checked).length} checked in</div>
           <div className="hdr-time">{session.dateLabel} &bull; {time}</div>
           <button className="hdr-change" onClick={()=>setSession(null)}>Change Session</button>
         </div>
