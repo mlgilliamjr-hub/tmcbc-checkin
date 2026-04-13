@@ -76,6 +76,8 @@
     .p-type{font-size:.66rem;color:var(--muted);margin-top:1px}
     .checkin-btn{background:var(--burgundy);color:#fff;border:none;border-radius:7px;padding:6px 13px;font-family:'DM Sans',sans-serif;font-size:.75rem;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0}
     .checked{display:flex;align-items:center;gap:4px;color:var(--success);font-size:.75rem;font-weight:600;flex-shrink:0}
+    .undo-btn{display:flex;align-items:center;gap:4px;color:var(--success);font-size:.75rem;font-weight:600;flex-shrink:0;background:var(--success-bg);border:1.5px solid var(--success);border-radius:7px;padding:4px 10px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s}
+    .undo-btn:hover{background:#fdecea;border-color:#c0392b;color:#c0392b}
     .g-pills{display:flex;gap:9px;margin-bottom:13px;flex-wrap:wrap}
     .g-pill{flex:1;min-width:120px;padding:9px 13px;border:1.5px solid var(--border);border-radius:9px;background:#fff;text-align:center;cursor:pointer}
     .g-pill.on{border-color:var(--burgundy);background:#fdf0f2}
@@ -320,6 +322,16 @@ function App() {
     const gs=load(K.guests,[]);
     gs.push({...guest,timestamp:new Date().toISOString()});
     save(K.guests,gs);
+  }
+
+  function removeCheckIn(key, name) {
+    if(!window.confirm('Remove ' + name + ' from check-in list?')) return;
+    const next={...checked};
+    delete next[key];
+    setChecked(next);
+    save(K.checked,next);
+    // sync removal to KV
+    fetch('/api/session?action=remove',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key})}).catch(()=>{});
   }
 
   const SHEETS_WEBHOOK = 'https://script.google.com/macros/s/AKfycbw2gNOANQ0bDcc_DlaUiy-gur-fHGqdA9iFXPmW_O-m-dkkEAQ6hUWHT--nkl48MBL8/exec';
