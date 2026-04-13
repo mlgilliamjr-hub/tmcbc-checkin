@@ -418,7 +418,7 @@ function App() {
                         <div className="avatar">{ini(p)}</div>
                         <div><div className="p-name">{p.name}</div><div className="p-type">{p.membershipType}</div></div>
                       </div>
-                      {isIn?<div className="checked">&#10003; {checked[p.id].time}</div>
+                      {isIn?<button className="undo-btn" onClick={e=>{e.stopPropagation();removeCheckIn(p.id,p.name);}}>&#10003; {checked[p.id].time} &times;</button>
                            :<button className="checkin-btn" onClick={e=>{e.stopPropagation();doCheckIn(p);}}>Check In</button>}
                     </div>
                   );
