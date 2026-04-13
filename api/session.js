@@ -61,6 +61,13 @@ export default async function handler(req, res) {
       return res.json({ ok: true });
     }
 
+    // POST: remove a check-in
+    if (req.method === 'POST' && action === 'remove') {
+      const { key } = req.body;
+      await redisPost(['HDEL', 'tmcbc:checkedIn', key]);
+      return res.json({ ok: true });
+    }
+
     // DELETE: end session
     if (req.method === 'DELETE' && action === 'end') {
       await redis('DEL', 'tmcbc:session');
